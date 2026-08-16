@@ -1,0 +1,1623 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="it" class="h-full bg-[#0d1117] text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Finanze</title>
+
+    <!-- Meta Tags iOS PWA & Safe Area -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Finanze">
+    <meta name="theme-color" content="#0d1117">
+
+    <!-- PWA Manifest & Icone -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0d1117',
+                        darkCard: '#161b22',
+                        darkBorder: '#30363d',
+                        brandGreen: '#2ea043',
+                        brandRed: '#f85149',
+                        brandBlue: '#38edf8',
+                        brandPurple: '#a855f7',
+                        brandOrange: '#f97316',
+                        brandDarkYellow: '#ca8a04'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js, Datalabels & Lucide Icons CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            padding-top: max(env(safe-area-inset-top), 24px);
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Riga di intestazione (mesi) del Riepilogo Annuale: resta visibile
+           mentre si scorre in verticale dentro il riquadro della tabella */
+        .riepilogo-th-sticky { position: sticky; top: 0; z-index: 15; }
+        .riepilogo-th-sticky.riepilogo-corner { z-index: 20; }
+
+        /* Righe verticali che separano le colonne dei mesi nel Riepilogo Annuale */
+        .riepilogo-grid th, .riepilogo-grid td { border-right: 1px solid rgba(48, 54, 61, 0.6); }
+        .riepilogo-grid th:last-child, .riepilogo-grid td:last-child { border-right: none; }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans bg-[#0d1117] text-slate-100 text-base">
+
+    <!-- MODAL MODIFICA TRANSAZIONE -->
+    <div id="edit-tx-modal" class="hidden fixed inset-0 z-50 bg-[#0d1117]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-md w-full bg-[#161b22] border border-[#30363d] rounded-3xl p-6 space-y-4 shadow-2xl text-left">
+            <h2 class="text-lg font-bold text-white text-center">Modifica Transazione</h2>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Data</label>
+                    <input type="date" id="edit-tx-date" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-xl px-3 py-2.5 text-slate-200 text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Tipo</label>
+                    <select id="edit-tx-type" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-xl px-3 py-2.5 text-slate-200 text-sm">
+                        <option value="Entrata">Entrata</option>
+                        <option value="Uscita">Uscita</option>
+                        <option value="Investito">Investito</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Categoria</label>
+                    <input type="text" id="edit-tx-category" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-xl px-3 py-2.5 text-slate-200 text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Importo (€)</label>
+                    <input type="text" inputmode="decimal" id="edit-tx-amount" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-xl px-3 py-2.5 text-slate-200 text-sm">
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Note</label>
+                    <input type="text" id="edit-tx-note" class="w-full mt-1 bg-[#0d1117] border border-[#30363d] rounded-xl px-3 py-2.5 text-slate-200 text-sm">
+                </div>
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeEditTransactionModal()" class="flex-1 py-3 bg-[#0d1117] border border-[#30363d] text-slate-300 font-bold rounded-2xl text-sm uppercase tracking-wider">Annulla</button>
+                <button onclick="confirmEditTransaction()" class="flex-1 py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl text-sm uppercase tracking-wider">Salva Modifica</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PRIMO AVVIO -->
+    <div id="first-launch-modal" class="fixed inset-0 z-50 bg-[#0d1117]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-md w-full space-y-8">
+            <div class="w-16 h-16 bg-sky-500/10 text-sky-400 rounded-2xl flex items-center justify-center mx-auto text-4xl">
+                💸
+            </div>
+            <div>
+                <h2 id="welcome-title" onclick="editWelcomeName()" class="text-2xl font-bold text-white cursor-pointer inline-block">Benvenuto!</h2>
+                <input type="text" id="user-name-input" oninput="updateWelcomeGreeting()" onblur="finishEditWelcomeName()"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}"
+                    placeholder="Il tuo nome" maxlength="30"
+                    class="hidden mx-auto text-2xl font-bold text-white bg-transparent border-b-2 border-sky-500 text-center focus:outline-none px-1 w-56">
+            </div>
+            <button onclick="confirmUserNameAndStart()" class="w-full py-4 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20">
+                <i data-lucide="play" class="w-5 h-5"></i> Avvia App
+            </button>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 hidden" onclick="toggleSidebar(false)"></div>
+    <aside id="sidebar" class="fixed top-0 left-0 bottom-0 w-80 bg-[#161b22] border-r border-[#30363d] z-50 -translate-x-full transition-transform duration-300 flex flex-col justify-between pt-12">
+        <div>
+            <div class="p-5 border-b border-[#30363d] flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="wallet" class="w-7 h-7 text-sky-400"></i>
+                    <h2 class="font-bold text-lg text-white">Menu Finanze</h2>
+                </div>
+                <button onclick="toggleSidebar(false)" class="p-2 text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+
+            <div class="p-4 space-y-2">
+                <button onclick="navTo('dashboard')" class="w-full text-left px-4 py-3.5 rounded-2xl hover:bg-[#21262d] flex items-center gap-3 text-base font-semibold text-slate-200">
+                    <i data-lucide="layout-dashboard" class="w-6 h-6 text-sky-400"></i> Dashboard
+                </button>
+                <button onclick="navTo('database')" class="w-full text-left px-4 py-3.5 rounded-2xl hover:bg-[#21262d] flex items-center gap-3 text-base font-semibold text-slate-200">
+                    <i data-lucide="database" class="w-6 h-6 text-indigo-400"></i> Database Movimenti
+                </button>
+                <button onclick="navTo('riepilogo')" class="w-full text-left px-4 py-3.5 rounded-2xl hover:bg-[#21262d] flex items-center gap-3 text-base font-semibold text-slate-200">
+                    <i data-lucide="table-2" class="w-6 h-6 text-emerald-400"></i> Riepilogo Annuale
+                </button>
+                <button id="nav-investimenti-btn" onclick="navTo('investimenti')" class="hidden w-full text-left px-4 py-3.5 rounded-2xl hover:bg-[#21262d] flex items-center gap-3 text-base font-semibold text-slate-200">
+                    <i data-lucide="line-chart" class="w-6 h-6 text-amber-400"></i> Investimenti
+                </button>
+            </div>
+        </div>
+
+        <div class="p-5 border-t border-[#30363d]">
+            <button onclick="triggerFilePicker()" class="w-full py-3.5 bg-sky-500/10 border border-sky-500/30 text-sky-400 rounded-2xl font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-sky-500/20">
+                <i data-lucide="refresh-cw" class="w-5 h-5"></i> Ricarica Cartella / File
+            </button>
+        </div>
+    </aside>
+
+    <!-- HEADER SUPERIORE -->
+    <header class="bg-[#0d1117] sticky top-0 z-30 pt-6 pb-3 px-4 border-b border-[#30363d]/50">
+        <div class="max-w-4xl mx-auto flex items-center justify-between gap-3">
+            <button onclick="toggleSidebar(true)" class="p-3 text-slate-200 hover:text-white rounded-2xl bg-[#161b22] border border-[#30363d] flex items-center justify-center">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+
+            <!-- SELETTORI ANNO E MESE -->
+            <div id="period-selectors" class="flex items-center gap-2 flex-1 justify-center">
+                <select id="select-year" onchange="changeYear(this.value)" class="bg-[#161b22] border border-[#30363d] text-sky-400 font-extrabold text-xl rounded-2xl px-5 py-3 focus:outline-none shadow-sm">
+                    <option value="2026">2026</option>
+                </select>
+                <select id="select-month" onchange="changeMonth(this.value)" class="bg-[#161b22] border border-[#30363d] text-sky-400 font-extrabold text-xl rounded-2xl px-5 py-3 focus:outline-none shadow-sm">
+                    <option value="0">Gennaio</option>
+                    <option value="1">Febbraio</option>
+                    <option value="2">Marzo</option>
+                    <option value="3">Aprile</option>
+                    <option value="4">Maggio</option>
+                    <option value="5">Giugno</option>
+                    <option value="6">Luglio</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Settembre</option>
+                    <option value="9">Ottobre</option>
+                    <option value="10">Novembre</option>
+                    <option value="11">Dicembre</option>
+                </select>
+            </div>
+
+            <!-- CONTROLLI RIEPILOGO ANNUALE (visibili solo nella vista Riepilogo) -->
+            <div id="riepilogo-header-controls" class="hidden flex-1 flex items-center justify-center gap-2">
+                <span class="text-emerald-400 font-extrabold text-sm uppercase tracking-wider">Anno</span>
+                <select id="select-year-riepilogo" onchange="changeRiepilogoYear(this.value)" class="bg-[#161b22] border border-[#30363d] text-sky-400 font-extrabold text-lg rounded-2xl px-4 py-2 focus:outline-none shadow-sm">
+                    <option value="2026">2026</option>
+                </select>
+            </div>
+
+            <!-- CONTROLLI INVESTIMENTI (visibili solo nella vista Investimenti) -->
+            <div id="investimenti-header-controls" class="hidden flex-1 flex flex-col items-center justify-center leading-tight">
+                <span class="text-amber-400 font-extrabold text-xs uppercase tracking-wider">Investimenti</span>
+                <span class="text-[13px] font-bold text-slate-200">
+                    <span id="invest-header-total" class="text-sky-400">0,0€</span> · <span id="invest-header-gain">0,0€</span>
+                </span>
+            </div>
+
+            <!-- CONTROLLI DATABASE (visibili solo nella vista Database) -->
+            <div id="db-header-controls" class="hidden flex-1 flex items-center justify-center gap-2 flex-wrap">
+                <span class="text-sky-400 font-extrabold text-sm uppercase tracking-wider">Database Movimenti</span>
+                <button onclick="saveModifiedYears()" id="db-save-btn" class="hidden px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 rounded-xl text-[11px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i> Salva
+                </button>
+                <button onclick="resetDbFilters()" id="db-reset-btn" class="hidden px-3 py-1.5 bg-red-500/10 border border-red-500/40 text-red-400 rounded-xl text-[11px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Reset
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-3 space-y-6">
+
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="tab-view space-y-6">
+            
+            <!-- BOX UNICO BILANCIO -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-5 space-y-4 shadow-xl">
+                <h3 class="text-sm font-black text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-400"></i> BILANCIO
+                </h3>
+                
+                <!-- GRAFICO DOPPIO ANELLO CONCENTRICO -->
+                <div class="relative h-72 w-full flex items-center justify-center">
+                    <canvas id="fixedDonutChart"></canvas>
+                </div>
+
+                <!-- BOX SEPARATI: MENSILE A SINISTRA, ANNUALE A DESTRA -->
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <!-- BOX MENSILE -->
+                    <div class="bg-[#0d1117] p-3 rounded-2xl border border-[#30363d] space-y-2">
+                        <div class="text-center font-black text-sm text-slate-300 uppercase tracking-wider border-b border-[#30363d] pb-1">MENSILE</div>
+                        <div class="space-y-1.5 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#2ea043]"></span> Entrata:</span>
+                                <span id="lbl-m-inc" class="font-extrabold text-emerald-400">0,0€</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#f85149]"></span> Uscita:</span>
+                                <span id="lbl-m-exp" class="font-extrabold text-red-400">0,0€</span>
+                            </div>
+                            <div id="row-m-inv" class="flex justify-between items-center">
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#eab308]"></span> Investito:</span>
+                                <span id="lbl-m-inv" class="font-extrabold text-[#eab308]">0,0€</span>
+                            </div>
+                            <div class="pt-1 border-t border-[#30363d]/40 flex justify-between items-center">
+                                <span class="text-slate-400 font-bold">Risparmio:</span>
+                                <span id="kpi-m-sav" class="font-black text-[#38edf8]">0,0€</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOX ANNUALE -->
+                    <div class="bg-[#0d1117] p-3 rounded-2xl border border-[#30363d] space-y-2">
+                        <div class="text-center font-black text-sm text-slate-300 uppercase tracking-wider border-b border-[#30363d] pb-1">ANNUALE</div>
+                        <div class="space-y-1.5 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#38bdf8]"></span> Entrata:</span>
+                                <span id="lbl-y-inc" class="font-extrabold text-sky-400">0,0€</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#a855f7]"></span> Uscita:</span>
+                                <span id="lbl-y-exp" class="font-extrabold text-purple-400">0,0€</span>
+                            </div>
+                            <div id="row-y-inv" class="flex justify-between items-center">
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#cbd5e1]"></span> Investito:</span>
+                                <span id="lbl-y-inv" class="font-extrabold text-[#cbd5e1]">0,0€</span>
+                            </div>
+                            <div class="pt-1 border-t border-[#30363d]/40 flex justify-between items-center">
+                                <span class="text-slate-400 font-bold">Risparmio:</span>
+                                <span id="kpi-y-sav" class="font-black text-[#38edf8]">0,0€</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAFICO BARRE ORIZZONTALI PER CATEGORIA -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-5 space-y-4 shadow-xl">
+                <div class="flex items-center justify-between">
+                    <h3 id="category-chart-title" class="text-sm font-black text-slate-300 uppercase tracking-wider">
+                        USCITE DEL MESE PER CATEGORIA (€)
+                    </h3>
+                </div>
+                <div id="bar-chart-container" class="relative w-full transition-all duration-300" style="min-height: 200px;">
+                    <canvas id="categoryBarChart"></canvas>
+                </div>
+            </div>
+
+            <!-- TABELLE CON SWIPE & BREADCRUMB PERIODO (INVERTITE: TOTALI A SINISTRA, CATEGORIA A DESTRA) -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl overflow-hidden shadow-xl" id="swipe-container">
+                
+                <!-- BADGE PERIODO ANALIZZATO -->
+                <div class="bg-[#0d1117] px-4 pt-3 pb-1 flex items-center justify-between border-b border-[#30363d]/50">
+                    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        PERIODO: <span id="current-period-badge" class="text-sky-400 font-extrabold">LUGLIO 2026</span>
+                    </div>
+                    <div id="total-count-badge" class="text-xs font-bold text-slate-400">
+                        TOTALE USCITE: <span id="total-count-val" class="text-red-400 font-extrabold">0</span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
+                    <div class="flex gap-2 w-full">
+                        <button onclick="switchSubOption('TOTALI')" id="btn-sub-totali" class="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-sky-500 text-white transition-all">USCITE TOTALI</button>
+                        <button onclick="switchSubOption('CATEGORIA')" id="btn-sub-categoria" class="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d] transition-all">USCITE PER CATEGORIA</button>
+                    </div>
+                </div>
+
+                <!-- PRIMA VISTA: USCITE TOTALI -->
+                <div id="sub-option-totali-view" class="p-4 overflow-x-auto">
+                    <table class="w-full text-center text-sm">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-[#30363d] font-bold">
+                                <th class="pb-3 w-14">Giorno</th>
+                                <th class="pb-3">Categoria</th>
+                                <th class="pb-3">Importo</th>
+                                <th class="pb-3">Nota</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sub-totali-table" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
+                    </table>
+                </div>
+
+                <!-- SECONDA VISTA: USCITE PER CATEGORIA -->
+                <div id="sub-option-categoria-view" class="p-4 overflow-x-auto hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-[#30363d] font-bold">
+                                <th class="pb-3">Categoria</th>
+                                <th class="pb-3 text-right">Spesa Mese</th>
+                                <th class="pb-3 text-right">Spesa Anno</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sub-categoria-table" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- DATABASE -->
+        <section id="view-database" class="tab-view hidden space-y-4">
+            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-3 space-y-3">
+                <!-- PANNELLO FILTRO DATA -->
+                <div id="db-filter-data" class="hidden bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-2">
+                    <div class="flex gap-2">
+                        <input type="date" id="db-date-from" class="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-2 py-1.5 text-slate-200 text-xs">
+                        <input type="date" id="db-date-to" class="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg px-2 py-1.5 text-slate-200 text-xs">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="setDbSort('desc')" id="db-sort-desc" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-sky-500 text-white">Recenti → Vecchi</button>
+                        <button onclick="setDbSort('asc')" id="db-sort-asc" class="flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d]">Vecchi → Recenti</button>
+                    </div>
+                    <button onclick="applyDbDateFilter()" class="w-full py-2 rounded-lg text-xs font-extrabold bg-emerald-500 text-white">Applica</button>
+                </div>
+
+                <!-- PANNELLO FILTRO CATEGORIA -->
+                <div id="db-filter-categoria" class="hidden bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-2">
+                    <select id="db-category-select" class="w-full bg-[#161b22] border border-[#30363d] rounded-lg px-2 py-1.5 text-slate-200 text-xs"></select>
+                    <button onclick="applyDbCategoryFilter()" class="w-full py-2 rounded-lg text-xs font-extrabold bg-emerald-500 text-white">Applica</button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center text-sm">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-[#30363d] font-bold">
+                                <th class="pb-3 w-16 cursor-pointer" onclick="toggleDbFilter('data')">Data</th>
+                                <th class="pb-3 w-24 cursor-pointer" onclick="toggleDbFilter('categoria')">Categoria</th>
+                                <th class="pb-3 w-20">Importo</th>
+                                <th class="pb-3 min-w-[160px]">
+                                    <input type="text" id="db-note-search" oninput="applyDbNoteFilter(this.value)" placeholder="Cerca nelle note..." class="w-full text-left bg-[#161b22] border border-[#30363d] rounded-lg px-2 py-1 text-[11px] font-medium text-slate-200 placeholder:text-slate-500 normal-case">
+                                </th>
+                                <th id="db-actions-header" class="pb-3 w-16">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="db-full-table" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIEPILOGO ANNUALE -->
+        <section id="view-riepilogo" class="tab-view hidden space-y-4">
+
+            <!-- FASCIA RIEPILOGATIVA -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-4 grid grid-cols-2 gap-3">
+                <div class="space-y-0.5">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Totale speso nell'anno</span>
+                    <div id="riep-tot-anno" class="text-xl font-black text-red-400">0,0€</div>
+                </div>
+                <div class="space-y-0.5">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mese con più spesa</span>
+                    <div id="riep-top-month" class="text-base font-extrabold text-red-400">-</div>
+                </div>
+                <div class="space-y-0.5">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mese con meno spesa</span>
+                    <div id="riep-low-month" class="text-base font-extrabold text-emerald-400">-</div>
+                </div>
+            </div>
+
+            <!-- WIDGET CON TOGGLE: RIEPILOGO (lista mensile) / CATEGORIA (griglia mese x categoria) -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl overflow-hidden shadow-xl">
+
+                <div class="p-3 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
+                    <div class="flex gap-2 w-full">
+                        <button onclick="switchRiepilogoSubOption('RIEPILOGO')" id="btn-riep-sub-riepilogo" class="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-sky-500 text-white transition-all">RIEPILOGO</button>
+                        <button onclick="switchRiepilogoSubOption('CATEGORIA')" id="btn-riep-sub-categoria" class="flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d] transition-all">CATEGORIA</button>
+                    </div>
+                </div>
+
+                <!-- PRIMA VISTA: RIEPILOGO (totali dell'anno + lista mensile) -->
+                <div id="riep-sub-riepilogo-view" class="p-4 space-y-4">
+                    <div class="flex gap-3">
+                        <div class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-0.5">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Speso nell'anno</span>
+                            <div id="riep-widget-tot-spesa" class="text-lg font-black text-red-400">0,0€</div>
+                        </div>
+                        <div class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-0.5">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Guadagnato nell'anno</span>
+                            <div id="riep-widget-tot-entrate" class="text-lg font-black text-emerald-400">0,0€</div>
+                        </div>
+                    </div>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-[#30363d] font-bold">
+                                <th class="pb-3 text-left">Mese</th>
+                                <th class="pb-3 text-right">Speso</th>
+                            </tr>
+                        </thead>
+                        <tbody id="riep-monthly-list" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
+                    </table>
+                </div>
+
+                <!-- SECONDA VISTA: CATEGORIA (mese x categoria) -->
+                <div id="riep-sub-categoria-view" class="hidden p-3 overflow-x-auto">
+                    <table class="riepilogo-grid text-center text-sm border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="bg-sky-500 text-white py-3 px-3 text-left font-black uppercase tracking-wide text-xs whitespace-nowrap">Categoria</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Gen</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Feb</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Mar</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Apr</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Mag</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Giu</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Lug</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Ago</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Set</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Ott</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Nov</th>
+                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Dic</th>
+                                <th class="bg-sky-600 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Totale</th>
+                            </tr>
+                        </thead>
+                        <tbody id="riepilogo-table" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- INVESTIMENTI -->
+        <section id="view-investimenti" class="tab-view hidden space-y-6">
+
+            <!-- DUE RING SEPARATI: composizione dell'investito e composizione del guadagno -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-5 space-y-4 shadow-xl">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1.5 flex flex-col items-center">
+                        <h3 class="text-center text-[11px] font-black text-sky-400 uppercase tracking-widest">Investito</h3>
+                        <div class="relative h-36 w-36">
+                            <canvas id="investPrincipalRing"></canvas>
+                        </div>
+                    </div>
+                    <div class="space-y-1.5 flex flex-col items-center">
+                        <h3 class="text-center text-[11px] font-black text-purple-400 uppercase tracking-widest">Rendimento</h3>
+                        <div class="relative h-36 w-36">
+                            <canvas id="investGainRing"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div id="invest-ring-legend" class="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-1 text-xs font-semibold"></div>
+            </div>
+
+            <!-- DETTAGLIO FONDO (swipe orizzontale per cambiare fondo) -->
+            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-5 space-y-4 shadow-xl" id="fund-swipe-container">
+                <div class="flex items-center justify-between gap-2">
+                    <button onclick="changeFund(-1)" class="p-2 rounded-xl bg-[#0d1117] border border-[#30363d] text-slate-400 hover:text-white"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                    <div class="flex-1 text-center">
+                        <div id="fund-name" class="text-lg font-black text-sky-400">-</div>
+                        <div id="fund-latest-pct" class="text-sm font-extrabold">-</div>
+                    </div>
+                    <button onclick="changeFund(1)" class="p-2 rounded-xl bg-[#0d1117] border border-[#30363d] text-slate-400 hover:text-white"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                </div>
+                <div id="fund-position-dots" class="flex justify-center gap-1.5"></div>
+
+                <div class="relative h-64 w-full">
+                    <canvas id="fundLineChart"></canvas>
+                </div>
+
+                <div class="overflow-auto max-h-[45vh] rounded-2xl">
+                    <table class="w-full text-center text-sm border-collapse table-fixed">
+                        <thead>
+                            <tr class="text-slate-400 text-xs uppercase tracking-wider">
+                                <th class="riepilogo-th-sticky bg-[#161b22] py-2 px-1 text-left w-12">Data</th>
+                                <th class="riepilogo-th-sticky bg-[#161b22] py-2 px-1">Totale €</th>
+                                <th class="riepilogo-th-sticky bg-[#161b22] py-2 px-1">Rendimento €</th>
+                                <th class="riepilogo-th-sticky bg-[#161b22] py-2 px-1">Rendimento %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fund-tx-table" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+
+    <input type="file" id="file-input" multiple webkitdirectory accept=".txt" class="hidden" onchange="handleFileSelect(event)">
+
+    <script>
+        // Registrazione Plugin Datalabels
+        Chart.register(ChartDataLabels);
+
+        let allTransactions = [];
+        let categoriesList = [];
+        let currentYear = '2026';
+        let currentMonth = 6; // Luglio (0-indexed: 6)
+        let currentRiepilogoYear = '2026';
+        let currentSubOption = 'TOTALI'; // Impostata di default su TOTALI
+
+        let donutChartInstance = null;
+        let barChartInstance = null;
+        let investChartInstance = null;
+        let investRingChartInstance = null;
+        let investGainRingChartInstance = null;
+
+        // Investimenti: transazioni caricate da Investimenti.txt (formato separato dalle spese)
+        let investmentTransactions = [];
+        let currentFundIndex = 0;
+
+        // Gestione modifica/cancellazione transazioni dal Database
+        let txIdCounter = 1;
+        let modifiedYears = new Set(); // anni con modifiche non ancora salvate su file
+        let editingTxId = null;
+
+        const monthNames = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+
+        // Formattazione valuta unica per tutto il progetto: es. 123,4€
+        function formatCurrency(amount) {
+            return (amount || 0).toFixed(1).replace('.', ',') + '€';
+        }
+
+        // Stato filtri Database Movimenti
+        let dbFilters = {
+            dateFrom: null,   // Date object o null
+            dateTo: null,     // Date object o null
+            sortOrder: 'desc', // 'desc' = recenti->vecchi, 'asc' = vecchi->recenti
+            category: null,   // stringa categoria o null
+            noteQuery: ''     // testo ricerca note
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            document.getElementById('select-year').value = currentYear;
+            document.getElementById('select-month').value = currentMonth;
+            document.getElementById('select-year-riepilogo').value = currentRiepilogoYear;
+            setupSwipeGestures();
+
+            // Precompila il nome salvato in precedenza su questo telefono (se esiste)
+            let savedName = '';
+            try { savedName = localStorage.getItem('financeAppUserName') || ''; } catch (err) {}
+            document.getElementById('user-name-input').value = savedName;
+            updateWelcomeGreeting();
+        });
+
+        function editWelcomeName() {
+            const title = document.getElementById('welcome-title');
+            const input = document.getElementById('user-name-input');
+            title.classList.add('hidden');
+            input.classList.remove('hidden');
+            input.focus();
+            input.select();
+        }
+
+        function finishEditWelcomeName() {
+            document.getElementById('user-name-input').classList.add('hidden');
+            document.getElementById('welcome-title').classList.remove('hidden');
+        }
+
+        function updateWelcomeGreeting() {
+            const name = document.getElementById('user-name-input').value.trim();
+            document.getElementById('welcome-title').innerText = name ? `Bentornato ${name}!` : 'Benvenuto!';
+        }
+
+        function confirmUserNameAndStart() {
+            const name = document.getElementById('user-name-input').value.trim();
+            try { localStorage.setItem('financeAppUserName', name); } catch (err) {}
+            triggerFilePicker();
+        }
+
+        function triggerFilePicker() {
+            document.getElementById('file-input').click();
+        }
+
+        // Legge file .txt dove ogni riga è un oggetto JSON di transazione, es:
+        // {"Data": "01/01/26", "Tipo": "Uscita", "Categoria": "Spesa", "Importo": "5.1", "Note": ""}
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            if (!files.length) return;
+
+            let filePromises = files.map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve({ fileName: file.name, text: e.target.result });
+                    reader.onerror = () => resolve(null);
+                    reader.readAsText(file);
+                });
+            });
+
+            Promise.all(filePromises).then(results => {
+                allTransactions = [];
+                investmentTransactions = [];
+                txIdCounter = 1;
+                let investIdCounter = 1;
+
+                results.filter(r => r !== null).forEach(res => {
+                    const isInvestFile = /investimenti/i.test(res.fileName);
+                    const lines = res.text.split(/\r?\n/);
+                    lines.forEach(line => {
+                        const trimmed = line.trim();
+                        if (!trimmed) return;
+                        try {
+                            const item = JSON.parse(trimmed);
+                            const parsedDate = parseItalianDate(item.Data);
+                            if (!parsedDate) return;
+
+                            if (isInvestFile) {
+                                if (!item.Fondo) return; // riga senza fondo, non ricostruibile
+                                investmentTransactions.push({
+                                    id: investIdCounter++,
+                                    date: parsedDate,
+                                    rawDate: item.Data,
+                                    fund: item.Fondo,
+                                    totale: parseFloat(String(item.Totale).trim().replace(',', '.')) || 0,
+                                    rendimentoPct: parseFloat(String(item['Rendimento%']).trim().replace(',', '.')) || 0,
+                                    rendimentoEuro: parseFloat(String(item['Rendimento€']).trim().replace(',', '.')) || 0
+                                });
+                            } else {
+                                if (!item.Tipo || !item.Categoria) return; // riga incompleta, viene ignorata invece di creare una voce fantasma
+                                allTransactions.push({
+                                    id: txIdCounter++,
+                                    date: parsedDate,
+                                    rawDate: item.Data,
+                                    type: item.Tipo,
+                                    category: item.Categoria,
+                                    amount: parseFloat(String(item.Importo).trim().replace(',', '.')) || 0,
+                                    notes: item.Note || ''
+                                });
+                            }
+                        } catch (err) {
+                            // riga non valida, viene semplicemente ignorata
+                        }
+                    });
+                });
+
+                // Le categorie non arrivano più da un file dedicato: si ricavano
+                // direttamente dalle transazioni caricate (vedi getCategoriesForPeriod)
+                categoriesList = [];
+                modifiedYears.clear();
+                updateSaveButtonVisibility();
+
+                // Il mese/anno di partenza è quello dell'ultima transazione registrata,
+                // così la dashboard si apre sempre sul periodo "attuale" reale, non fisso
+                if (allTransactions.length > 0) {
+                    const latestTx = allTransactions.reduce((latest, t) => t.date > latest.date ? t : latest, allTransactions[0]);
+                    currentYear = latestTx.date.getFullYear().toString();
+                    currentMonth = latestTx.date.getMonth();
+                }
+
+                document.getElementById('first-launch-modal').classList.add('hidden');
+                populateYearSelect();
+                populateRiepilogoYearSelect();
+                document.getElementById('select-month').value = currentMonth;
+
+                // La voce "Investimenti" nel menu compare solo se è stato importato Investimenti.txt
+                const hasInvestments = investmentTransactions.length > 0;
+                document.getElementById('nav-investimenti-btn').classList.toggle('hidden', !hasInvestments);
+                currentFundIndex = 0;
+                if (hasInvestments) renderInvestmentsView();
+
+                renderAll();
+            });
+        }
+
+        // ===================== INVESTIMENTI =====================
+
+        const FUND_COLORS = ['#38bdf8', '#a855f7', '#eab308', '#f85149', '#22c55e', '#ec4899', '#06b6d4', '#f97316', '#8b5cf6', '#84cc16'];
+
+        // Elenco fondi presenti, ordinati dal più aggiornato (data ultima transazione) al più vecchio
+        function getFundsList() {
+            const lastDateByFund = {};
+            investmentTransactions.forEach(t => {
+                if (!lastDateByFund[t.fund] || t.date > lastDateByFund[t.fund]) lastDateByFund[t.fund] = t.date;
+            });
+            return Object.keys(lastDateByFund).sort((a, b) => lastDateByFund[b] - lastDateByFund[a]);
+        }
+
+        // Ultima transazione (per data) di un fondo specifico
+        function getLatestForFund(fund) {
+            const txs = investmentTransactions.filter(t => t.fund === fund);
+            return txs.reduce((latest, t) => (!latest || t.date > latest.date) ? t : latest, null);
+        }
+
+        function renderInvestmentsView() {
+            const funds = getFundsList();
+            if (funds.length === 0) return;
+            if (currentFundIndex >= funds.length) currentFundIndex = 0;
+
+            renderInvestRingChart(funds);
+            renderFundDetail(funds);
+        }
+
+        function renderInvestRingChart(funds) {
+            let totalPrincipal = 0; // somma della colonna "Totale" (valore attuale) di ogni fondo, l'ultimo dato disponibile
+            let totalGain = 0;
+            const fundData = []; // { fund, principal, gain, color }
+
+            funds.forEach((fund, i) => {
+                const latest = getLatestForFund(fund);
+                const gain = latest.rendimentoEuro;
+                const principal = latest.totale; // valore "Totale" del fondo così com'è nel file, identico alla tabella sottostante
+                totalPrincipal += principal;
+                totalGain += gain;
+                fundData.push({ fund, principal, gain, color: FUND_COLORS[i % FUND_COLORS.length] });
+            });
+
+            const colors = fundData.map(f => f.color);
+
+            // Totali spostati in alto nell'header, accanto al titolo "Investimenti"
+            const totalEl = document.getElementById('invest-header-total');
+            totalEl.innerText = `Investito ${formatCurrency(totalPrincipal)}`;
+            const gainHeaderEl = document.getElementById('invest-header-gain');
+            gainHeaderEl.innerText = `Guadagno ${formatCurrency(totalGain)}`;
+            gainHeaderEl.className = totalGain >= 0 ? 'text-emerald-400' : 'text-red-400';
+
+            const commonOptions = (labelPrefix) => ({
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                    legend: { display: false },
+                    datalabels: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ` ${ctx.label}: ${formatCurrency(ctx.raw)}`
+                        }
+                    }
+                },
+                cutout: '55%'
+            });
+
+            // Ring 1: come è diviso il capitale investito tra i fondi
+            const ctxPrincipal = document.getElementById('investPrincipalRing').getContext('2d');
+            if (investRingChartInstance) investRingChartInstance.destroy();
+            investRingChartInstance = new Chart(ctxPrincipal, {
+                type: 'doughnut',
+                data: {
+                    labels: fundData.map(f => f.fund),
+                    datasets: [{ data: fundData.map(f => f.principal), backgroundColor: colors, borderWidth: 0 }]
+                },
+                options: commonOptions('Investito')
+            });
+
+            // Ring 2: come è diviso il guadagno tra i fondi (stessi colori, canvas separato)
+            const ctxGain = document.getElementById('investGainRing').getContext('2d');
+            if (investGainRingChartInstance) investGainRingChartInstance.destroy();
+            investGainRingChartInstance = new Chart(ctxGain, {
+                type: 'doughnut',
+                data: {
+                    labels: fundData.map(f => f.fund),
+                    datasets: [{ data: fundData.map(f => Math.max(0, f.gain)), backgroundColor: colors, borderWidth: 0 }]
+                },
+                options: commonOptions('Guadagno')
+            });
+
+            // Legenda unica, valida per entrambi i ring (stesso colore = stesso fondo)
+            const legend = document.getElementById('invest-ring-legend');
+            let legendHtml = '';
+            fundData.forEach(f => {
+                legendHtml += `<span class="flex items-center gap-1.5 text-slate-300"><span class="w-2.5 h-2.5 rounded-full" style="background:${f.color}"></span> ${f.fund}: ${formatCurrency(f.principal)} <span class="${f.gain >= 0 ? 'text-emerald-400' : 'text-red-400'}">(${formatCurrency(f.gain)})</span></span>`;
+            });
+            legend.innerHTML = legendHtml;
+        }
+
+        function changeFund(direction) {
+            const funds = getFundsList();
+            if (funds.length === 0) return;
+            currentFundIndex = (currentFundIndex + direction + funds.length) % funds.length;
+            renderFundDetail(funds);
+        }
+
+        function renderFundDetail(funds) {
+            const fund = funds[currentFundIndex];
+            const txs = investmentTransactions.filter(t => t.fund === fund).slice().sort((a, b) => a.date - b.date); // ascendente per il grafico
+
+            const latest = txs[txs.length - 1];
+
+            document.getElementById('fund-name').innerText = fund;
+            const pctEl = document.getElementById('fund-latest-pct');
+            pctEl.innerText = `${latest.rendimentoPct.toFixed(2).replace('.', ',')}%`;
+            pctEl.className = 'text-sm font-extrabold ' + (latest.rendimentoPct >= 0 ? 'text-emerald-400' : 'text-red-400');
+
+            // Puntini di posizione (come un carosello)
+            const dots = document.getElementById('fund-position-dots');
+            dots.innerHTML = funds.map((f, i) =>
+                `<span class="w-2 h-2 rounded-full ${i === currentFundIndex ? 'bg-sky-400' : 'bg-[#30363d]'}"></span>`
+            ).join('');
+
+            // Grafico a doppio asse: Totale € (blu, asse sinistro) + Rendimento % (viola, asse destro)
+            const ctx = document.getElementById('fundLineChart').getContext('2d');
+            if (investChartInstance) investChartInstance.destroy();
+
+            investChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: txs.map(t => `${String(t.date.getMonth() + 1).padStart(2, '0')}/${String(t.date.getFullYear()).slice(-2)}`),
+                    datasets: [
+                        {
+                            label: 'Totale investito (€)',
+                            data: txs.map(t => t.totale),
+                            borderColor: '#38bdf8',
+                            backgroundColor: '#38bdf8',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            pointRadius: 3
+                        },
+                        {
+                            label: 'Rendimento (%)',
+                            data: txs.map(t => t.rendimentoPct),
+                            borderColor: '#a855f7',
+                            backgroundColor: '#a855f7',
+                            yAxisID: 'y1',
+                            tension: 0.3,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: '#94a3b8', font: { size: 11, weight: 'bold' }, boxWidth: 10 }
+                        },
+                        datalabels: { display: false }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+                        y: { display: false },
+                        y1: { display: false }
+                    }
+                }
+            });
+
+            // Tabella transazioni del fondo, più recente in alto
+            const tbody = document.getElementById('fund-tx-table');
+            const rowsDesc = txs.slice().sort((a, b) => b.date - a.date);
+            tbody.innerHTML = rowsDesc.map(t => `
+                <tr class="hover:bg-[#21262d]">
+                    <td class="py-2.5 px-1 text-left text-slate-400">${String(t.date.getMonth() + 1).padStart(2, '0')}/${String(t.date.getFullYear()).slice(-2)}</td>
+                    <td class="py-2.5 px-1 font-bold text-sky-400">${formatCurrency(t.totale)}</td>
+                    <td class="py-2.5 px-1 font-semibold ${t.rendimentoEuro >= 0 ? 'text-emerald-400' : 'text-red-400'}">${formatCurrency(t.rendimentoEuro)}</td>
+                    <td class="py-2.5 px-1 font-semibold ${t.rendimentoPct >= 0 ? 'text-emerald-400' : 'text-red-400'}">${t.rendimentoPct.toFixed(2).replace('.', ',')}%</td>
+                </tr>
+            `).join('');
+        }
+
+        // Ricostruisce il menu a tendina degli anni in base a tutti gli anni presenti nei file caricati
+        function populateYearSelect() {
+            const years = Array.from(new Set(allTransactions.map(t => t.date.getFullYear().toString())))
+                .sort((a, b) => b - a); // dal più recente al più vecchio
+
+            const select = document.getElementById('select-year');
+
+            if (years.length === 0) {
+                select.innerHTML = `<option value="${currentYear}">${currentYear}</option>`;
+                return;
+            }
+
+            select.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+
+            // Mantiene l'anno corrente se presente tra i dati caricati, altrimenti seleziona il più recente
+            currentYear = years.includes(currentYear) ? currentYear : years[0];
+            select.value = currentYear;
+        }
+
+        // Ricostruisce il menu a tendina degli anni della vista Riepilogo Annuale
+        function populateRiepilogoYearSelect() {
+            const years = Array.from(new Set(allTransactions.map(t => t.date.getFullYear().toString())))
+                .sort((a, b) => b - a);
+
+            const select = document.getElementById('select-year-riepilogo');
+            if (years.length === 0) {
+                select.innerHTML = `<option value="${currentRiepilogoYear}">${currentRiepilogoYear}</option>`;
+                return;
+            }
+
+            select.innerHTML = years.map(y => `<option value="${y}">${y}</option>`).join('');
+            currentRiepilogoYear = years.includes(currentRiepilogoYear) ? currentRiepilogoYear : years[0];
+            select.value = currentRiepilogoYear;
+        }
+
+        function changeRiepilogoYear(val) {
+            currentRiepilogoYear = val;
+            renderRiepilogoTable();
+        }
+
+        // Tabella Categoria x Mese (stile riepilogo Numbers): ogni categoria è una riga,
+        // le entrate (es. Stipendio) vengono evidenziate ed elencate per prime
+        function renderRiepilogoTable() {
+            const tbody = document.getElementById('riepilogo-table');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const yearTxs = allTransactions.filter(t => t.date.getFullYear().toString() === currentRiepilogoYear);
+
+            const catMonthMap = {};
+            const catIsIncome = {};
+
+            yearTxs.forEach(t => {
+                if (t.type === 'Investito') return; // l'investito resta fuori dal riepilogo per categoria
+                if (!catMonthMap[t.category]) catMonthMap[t.category] = new Array(12).fill(0);
+                catMonthMap[t.category][t.date.getMonth()] += t.amount;
+                if (t.type === 'Entrata') catIsIncome[t.category] = true;
+            });
+
+            const cats = Object.keys(catMonthMap).sort((a, b) => {
+                const aInc = catIsIncome[a] ? 0 : 1;
+                const bInc = catIsIncome[b] ? 0 : 1;
+                if (aInc !== bInc) return aInc - bInc;
+                return a.localeCompare(b);
+            });
+
+            // Dati per la fascia riepilogativa: solo categorie di spesa (esclude le entrate)
+            const monthTotals = new Array(12).fill(0);
+            let yearTotalSpent = 0;
+
+            cats.forEach(cat => {
+                if (catIsIncome[cat]) return;
+                const values = catMonthMap[cat];
+                const total = values.reduce((s, v) => s + v, 0);
+                yearTotalSpent += total;
+                values.forEach((v, i) => monthTotals[i] += v);
+            });
+
+            document.getElementById('riep-tot-anno').innerText = formatCurrency(yearTotalSpent);
+
+            // Totale guadagnato nell'anno (somma delle entrate, es. Stipendio)
+            let yearTotalIncome = 0;
+            cats.forEach(cat => {
+                if (!catIsIncome[cat]) return;
+                yearTotalIncome += catMonthMap[cat].reduce((s, v) => s + v, 0);
+            });
+            document.getElementById('riep-widget-tot-spesa').innerText = formatCurrency(yearTotalSpent);
+            document.getElementById('riep-widget-tot-entrate').innerText = formatCurrency(yearTotalIncome);
+
+            // Lista mensile (vista RIEPILOGO): un mese per riga, in stile Database Movimenti
+            const monthlyList = document.getElementById('riep-monthly-list');
+            if (monthlyList) {
+                monthlyList.innerHTML = monthTotals.map((v, i) => `
+                    <tr class="hover:bg-[#21262d]">
+                        <td class="py-3 px-1 text-left font-semibold text-slate-200">${monthNames[i]}</td>
+                        <td class="py-3 px-1 text-right font-bold ${v > 0 ? 'text-red-400' : 'text-slate-600'}">${formatCurrency(v)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            const monthsWithData = monthTotals.map((v, i) => ({ v, i })).filter(m => m.v > 0);
+            if (monthsWithData.length > 0) {
+                const maxMonth = monthsWithData.reduce((a, b) => b.v > a.v ? b : a);
+                const minMonth = monthsWithData.reduce((a, b) => b.v < a.v ? b : a);
+                document.getElementById('riep-top-month').innerText = `${monthNames[maxMonth.i]} · ${formatCurrency(maxMonth.v)}`;
+                document.getElementById('riep-low-month').innerText = `${monthNames[minMonth.i]} · ${formatCurrency(minMonth.v)}`;
+            } else {
+                document.getElementById('riep-top-month').innerText = '-';
+                document.getElementById('riep-low-month').innerText = '-';
+            }
+
+            cats.forEach(cat => {
+                const values = catMonthMap[cat];
+                const total = values.reduce((s, v) => s + v, 0);
+                const isInc = catIsIncome[cat];
+
+                // Mese con la spesa più alta per questa categoria, evidenziato in rosso
+                let maxIdx = -1, maxVal = 0;
+                if (!isInc) {
+                    values.forEach((v, i) => { if (v > maxVal) { maxVal = v; maxIdx = i; } });
+                }
+
+                tbody.innerHTML += `
+                    <tr class="${isInc ? 'bg-emerald-500/10' : ''} hover:bg-[#21262d]">
+                        <td class="sticky left-0 ${isInc ? 'bg-[#12281a]' : 'bg-[#161b22]'} py-2.5 px-3 text-left ${isInc ? 'font-black text-emerald-400' : 'font-semibold text-slate-200'} whitespace-nowrap z-10">${cat}</td>
+                        ${values.map((v, i) => `<td class="py-2.5 px-3 ${i === maxIdx ? 'text-red-400 font-black' : 'text-slate-300'}">${v ? formatCurrency(v) : ''}</td>`).join('')}
+                        <td class="py-2.5 px-3 font-bold ${isInc ? 'text-emerald-400' : 'text-red-400'}">${formatCurrency(total)}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function parseItalianDate(str) {
+            if (!str) return null;
+            const parts = str.split('/');
+            if (parts.length === 3) {
+                let day = parseInt(parts[0], 10);
+                let month = parseInt(parts[1], 10) - 1;
+                let year = parseInt(parts[2], 10);
+                if (year < 100) year += 2000;
+                return new Date(year, month, day);
+            }
+            return null;
+        }
+
+        function changeYear(val) { currentYear = val; renderAll(); }
+        function changeMonth(val) { currentMonth = parseInt(val, 10); renderAll(); }
+
+        function renderAll() {
+            const yearTxs = allTransactions.filter(t => t.date.getFullYear().toString() === currentYear);
+            const monthTxs = yearTxs.filter(t => t.date.getMonth() === currentMonth);
+
+            const yearInc = yearTxs.filter(t => t.type === 'Entrata').reduce((s, t) => s + t.amount, 0);
+            const yearExp = yearTxs.filter(t => t.type === 'Uscita').reduce((s, t) => s + t.amount, 0);
+            const yearInv = yearTxs.filter(t => t.type === 'Investito').reduce((s, t) => s + t.amount, 0);
+            const yearSav = yearInc - yearInv - yearExp;
+
+            const monthInc = monthTxs.filter(t => t.type === 'Entrata').reduce((s, t) => s + t.amount, 0);
+            const monthExp = monthTxs.filter(t => t.type === 'Uscita').reduce((s, t) => s + t.amount, 0);
+            const monthInv = monthTxs.filter(t => t.type === 'Investito').reduce((s, t) => s + t.amount, 0);
+            const monthSav = monthInc - monthInv - monthExp;
+
+            // Aggiorna Badge Periodo Selezione
+            document.getElementById('current-period-badge').innerText = `${monthNames[currentMonth].toUpperCase()} ${currentYear}`;
+
+            // Aggiorna valori nei box distinti
+            document.getElementById('lbl-m-inc').innerText = formatCurrency(monthInc);
+            document.getElementById('lbl-m-exp').innerText = formatCurrency(monthExp);
+            document.getElementById('lbl-m-inv').innerText = formatCurrency(monthInv);
+            document.getElementById('kpi-m-sav').innerText = formatCurrency(monthSav);
+
+            document.getElementById('lbl-y-inc').innerText = formatCurrency(yearInc);
+            document.getElementById('lbl-y-exp').innerText = formatCurrency(yearExp);
+            document.getElementById('lbl-y-inv').innerText = formatCurrency(yearInv);
+            document.getElementById('kpi-y-sav').innerText = formatCurrency(yearSav);
+
+            // "Investito" viene mostrato solo se esiste almeno una transazione di quel tipo in tutto il database
+            const hasInvestito = allTransactions.some(t => t.type === 'Investito');
+            document.getElementById('row-m-inv').classList.toggle('hidden', !hasInvestito);
+            document.getElementById('row-y-inv').classList.toggle('hidden', !hasInvestito);
+
+            renderDoubleDonutChart(monthInc, monthExp, monthInv, yearInc, yearExp, yearInv, hasInvestito);
+            renderCategoryBarChart(monthTxs);
+            renderSubTables(yearTxs, monthTxs);
+            renderDatabaseTable();
+            renderRiepilogoTable();
+        }
+
+        // DOPPIO ANELLO CONCENTRICO
+        // PLUGIN: valori curvi all'interno delle fette del doughnut chart
+        function drawTextOnArc(ctx, text, cx, cy, radius, startAngle, endAngle, fontSize) {
+            const midAngle = (startAngle + endAngle) / 2;
+            const anglePerChar = (fontSize * 0.85) / radius; // spaziatura approssimativa tra caratteri
+            const maxSpan = (endAngle - startAngle) * 0.78;
+            let span = anglePerChar * (text.length - 1);
+            if (span > maxSpan) span = maxSpan;
+            const step = text.length > 1 ? span / (text.length - 1) : 0;
+
+            // Sul lato destro dell'anello (verde/azzurro) il testo va "ribaltato" per leggersi
+            // nello stesso verso del lato sinistro (rosso/viola), altrimenti risulta capovolto
+            const flip = Math.cos(midAngle) > 0;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = 'rgba(13,17,23,0.9)';
+            ctx.lineWidth = 3;
+
+            let charAngle = midAngle - span / 2;
+            for (let i = 0; i < text.length; i++) {
+                const charIndex = flip ? (text.length - 1 - i) : i;
+                ctx.save();
+                ctx.rotate(flip ? (charAngle - Math.PI / 2) : (charAngle + Math.PI / 2));
+                ctx.translate(0, -radius);
+                ctx.strokeText(text[charIndex], 0, 0);
+                ctx.fillText(text[charIndex], 0, 0);
+                ctx.restore();
+                charAngle += step;
+            }
+            ctx.restore();
+        }
+
+        const curvedValueLabelsPlugin = {
+            id: 'curvedValueLabels',
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                    const meta = chart.getDatasetMeta(datasetIndex);
+                    if (!meta || meta.hidden) return;
+                    meta.data.forEach((arc, index) => {
+                        const value = dataset.data[index];
+                        if (!value) return;
+                        const { x, y, startAngle, endAngle, innerRadius, outerRadius } =
+                            arc.getProps(['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius'], true);
+                        if (endAngle - startAngle < 0.12) return; // fetta troppo piccola per il testo
+
+                        // L'anello esterno (Anno, datasetIndex 0) spinge il testo verso il bordo esterno,
+                        // l'anello interno (Mese, datasetIndex 1) lo spinge verso il bordo interno:
+                        // così le due fasce di testo restano ben separate e non si sovrappongono più.
+                        const bandThickness = outerRadius - innerRadius;
+                        const radiusFactor = datasetIndex === 0 ? 0.72 : 0.28;
+                        const radius = innerRadius + bandThickness * radiusFactor;
+                        const fontSize = Math.max(8, Math.min(11, bandThickness * 0.42));
+
+                        drawTextOnArc(ctx, formatCurrency(value), x, y, radius, startAngle, endAngle, fontSize);
+                    });
+                });
+            }
+        };
+
+        function renderDoubleDonutChart(mInc, mExp, mInv, yInc, yExp, yInv, hasInvestito) {
+            const ctx = document.getElementById('fixedDonutChart').getContext('2d');
+            if (donutChartInstance) donutChartInstance.destroy();
+
+            const yearData = hasInvestito ? [yInc, yExp, yInv] : [yInc, yExp];
+            const yearColors = hasInvestito ? ['#38bdf8', '#a855f7', '#cbd5e1'] : ['#38bdf8', '#a855f7'];
+            const monthData = hasInvestito ? [mInc, mExp, mInv] : [mInc, mExp];
+            const monthColors = hasInvestito ? ['#2ea043', '#f85149', '#eab308'] : ['#2ea043', '#f85149'];
+
+            donutChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Anno',
+                            data: yearData,
+                            backgroundColor: yearColors,
+                            borderWidth: 0,
+                            weight: 1.0
+                        },
+                        {
+                            label: 'Mese',
+                            data: monthData,
+                            backgroundColor: monthColors,
+                            borderWidth: 0,
+                            weight: 1.5
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { display: false }
+                    },
+                    cutout: '55%'
+                }
+            });
+        }
+
+        // GRAFICO BARRE ORIZZONTALI PER CATEGORIA
+        function renderCategoryBarChart(monthTxs) {
+            const ctx = document.getElementById('categoryBarChart').getContext('2d');
+            if (barChartInstance) barChartInstance.destroy();
+
+            const catMap = {};
+            monthTxs.filter(t => t.type === 'Uscita').forEach(t => {
+                catMap[t.category] = (catMap[t.category] || 0) + t.amount;
+            });
+
+            // Filtra solo categorie con valore > 0 e ordina alfabeticamente
+            const sortedCategories = Object.keys(catMap)
+                .filter(cat => catMap[cat] > 0)
+                .sort((a, b) => a.localeCompare(b));
+
+            const dataValues = sortedCategories.map(cat => catMap[cat]);
+
+            const containerHeight = Math.max(220, sortedCategories.length * 36);
+            document.getElementById('bar-chart-container').style.height = `${containerHeight}px`;
+
+            barChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCategories,
+                    datasets: [{
+                        label: 'Spesa (€)',
+                        data: dataValues,
+                        backgroundColor: '#38edf8',
+                        borderRadius: 6,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: { right: 70 }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'right',
+                            offset: 6,
+                            color: '#38edf8',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (value) => formatCurrency(value)
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#64748b' },
+                            grid: { color: '#30363d' }
+                        },
+                        y: {
+                            ticks: { color: '#e2e8f0', font: { size: 12, weight: 'bold' } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // RENDERING TABELLE CON VISTE INVERTITE
+        function renderSubTables(yearTxs, monthTxs) {
+            // USCITE TOTALI DEL MESE
+            const tableTotali = document.getElementById('sub-totali-table');
+            tableTotali.innerHTML = '';
+            const monthExps = monthTxs.filter(t => t.type === 'Uscita')
+                .slice()
+                .sort((a, b) => {
+                    const dateDiff = b.date - a.date;
+                    if (dateDiff !== 0) return dateDiff;
+                    return b.id - a.id; // a parità di data, l'ultima inserita per prima
+                });
+
+            document.getElementById('total-count-val').innerText = monthExps.length;
+
+            monthExps.forEach(t => {
+                tableTotali.innerHTML += `
+                    <tr class="hover:bg-[#21262d]">
+                        <td class="py-3 text-slate-400">${t.date.getDate()}</td>
+                        <td class="py-3 font-semibold text-slate-200">${t.category}</td>
+                        <td class="py-3 font-bold text-red-400">${formatCurrency(t.amount)}</td>
+                        <td class="py-3 text-slate-400 text-xs">${t.notes}</td>
+                    </tr>
+                `;
+            });
+
+            // USCITE PER CATEGORIA
+            const tableCategoria = document.getElementById('sub-categoria-table');
+            tableCategoria.innerHTML = '';
+            
+            const catYearMap = {}, catMonthMap = {};
+            yearTxs.filter(t => t.type === 'Uscita').forEach(t => { catYearMap[t.category] = (catYearMap[t.category] || 0) + t.amount; });
+            monthTxs.filter(t => t.type === 'Uscita').forEach(t => { catMonthMap[t.category] = (catMonthMap[t.category] || 0) + t.amount; });
+
+            const allCats = Array.from(new Set([...categoriesList, ...Object.keys(catYearMap), ...Object.keys(catMonthMap)]))
+                .sort((a, b) => a.localeCompare(b));
+
+            allCats.forEach(cat => {
+                const mVal = catMonthMap[cat] || 0;
+                const yVal = catYearMap[cat] || 0;
+                if (mVal > 0 || yVal > 0) {
+                    tableCategoria.innerHTML += `
+                        <tr class="hover:bg-[#21262d]">
+                            <td class="py-3 font-semibold text-slate-200">${cat}</td>
+                            <td class="py-3 text-right font-bold text-red-400">${formatCurrency(mVal)}</td>
+                            <td class="py-3 text-right text-slate-400">${formatCurrency(yVal)}</td>
+                        </tr>
+                    `;
+                }
+            });
+        }
+
+        function renderDatabaseTable() {
+            const dbTable = document.getElementById('db-full-table');
+            dbTable.innerHTML = '';
+
+            // Il Database mostra sempre TUTTE le transazioni caricate (tutti gli anni/file), senza vincolo di periodo
+            let rows = allTransactions.slice();
+
+            if (dbFilters.dateFrom) rows = rows.filter(t => t.date >= dbFilters.dateFrom);
+            if (dbFilters.dateTo) rows = rows.filter(t => t.date <= dbFilters.dateTo);
+            if (dbFilters.category) rows = rows.filter(t => t.category === dbFilters.category);
+            if (dbFilters.noteQuery) {
+                const q = dbFilters.noteQuery.toLowerCase();
+                rows = rows.filter(t => (t.notes || '').toLowerCase().includes(q));
+            }
+
+            rows.sort((a, b) => {
+                const dateDiff = a.date - b.date;
+                if (dateDiff !== 0) return dbFilters.sortOrder === 'asc' ? dateDiff : -dateDiff;
+                // A parità di data (nessun orario nei file), l'ultima transazione
+                // inserita nel file va considerata la più recente
+                return dbFilters.sortOrder === 'asc' ? a.id - b.id : b.id - a.id;
+            });
+
+            rows.forEach(t => {
+                const colorClass = t.type === 'Entrata' ? 'text-emerald-400'
+                    : t.type === 'Investito' ? 'text-orange-400'
+                    : 'text-red-400';
+                const actionsCell = `
+                        <td class="py-3">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="openEditTransactionModal(${t.id})" class="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                <button onclick="deleteTransactionConfirm(${t.id})" class="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </td>`;
+                dbTable.innerHTML += `
+                    <tr class="hover:bg-[#21262d]">
+                        <td class="py-3 font-semibold ${colorClass}">${t.rawDate}</td>
+                        <td class="py-3 font-semibold text-slate-200">${t.category}</td>
+                        <td class="py-3 font-bold ${colorClass}">${formatCurrency(t.amount)}</td>
+                        <td class="py-3 text-slate-400 text-xs">${t.notes}</td>
+                        ${actionsCell}
+                    </tr>
+                `;
+            });
+
+            lucide.createIcons();
+        }
+
+        // ===== MODIFICA / CANCELLAZIONE TRANSAZIONI =====
+
+        function toItalianDate(dateObj) {
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const yy = String(dateObj.getFullYear()).slice(-2);
+            return `${dd}/${mm}/${yy}`;
+        }
+
+        function toDateInputValue(dateObj) {
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            return `${dateObj.getFullYear()}-${mm}-${dd}`;
+        }
+
+        function openEditTransactionModal(id) {
+            const t = allTransactions.find(tx => tx.id === id);
+            if (!t) return;
+            editingTxId = id;
+            document.getElementById('edit-tx-date').value = toDateInputValue(t.date);
+            document.getElementById('edit-tx-type').value = t.type;
+            document.getElementById('edit-tx-category').value = t.category;
+            document.getElementById('edit-tx-amount').value = t.amount;
+            document.getElementById('edit-tx-note').value = t.notes || '';
+            document.getElementById('edit-tx-modal').classList.remove('hidden');
+        }
+
+        function closeEditTransactionModal() {
+            editingTxId = null;
+            document.getElementById('edit-tx-modal').classList.add('hidden');
+        }
+
+        function confirmEditTransaction() {
+            const t = allTransactions.find(tx => tx.id === editingTxId);
+            if (!t) return;
+
+            const oldYear = t.date.getFullYear();
+
+            const dateVal = document.getElementById('edit-tx-date').value; // YYYY-MM-DD
+            const [yy, mm, dd] = dateVal.split('-').map(Number);
+            const newDate = new Date(yy, mm - 1, dd);
+
+            t.date = newDate;
+            t.rawDate = toItalianDate(newDate);
+            t.type = document.getElementById('edit-tx-type').value;
+            t.category = document.getElementById('edit-tx-category').value.trim();
+            t.amount = parseFloat(String(document.getElementById('edit-tx-amount').value).trim().replace(',', '.')) || 0;
+            t.notes = document.getElementById('edit-tx-note').value.trim();
+
+            modifiedYears.add(oldYear);
+            modifiedYears.add(t.date.getFullYear());
+
+            closeEditTransactionModal();
+            updateSaveButtonVisibility();
+            populateYearSelect();
+            populateRiepilogoYearSelect();
+            renderAll();
+        }
+
+        function deleteTransactionConfirm(id) {
+            const t = allTransactions.find(tx => tx.id === id);
+            if (!t) return;
+            const ok = confirm(`Cancellare la transazione "${t.category}" del ${t.rawDate} (${formatCurrency(t.amount)})?`);
+            if (!ok) return;
+
+            modifiedYears.add(t.date.getFullYear());
+            allTransactions = allTransactions.filter(tx => tx.id !== id);
+
+            updateSaveButtonVisibility();
+            populateYearSelect();
+            populateRiepilogoYearSelect();
+            renderAll();
+        }
+
+        function updateSaveButtonVisibility() {
+            document.getElementById('db-save-btn').classList.toggle('hidden', modifiedYears.size === 0);
+        }
+
+        // Rigenera il file .txt di un anno (stesso formato di caricamento: una riga JSON per transazione)
+        // e lo scarica. IMPORTANTE: su Safari/iOS il click deve avvenire in modo SINCRONO dentro
+        // il gestore del tap, altrimenti il download viene bloccato in silenzio (bug corretto qui:
+        // prima era dentro un setTimeout e per questo non succedeva nulla).
+        function saveModifiedYears() {
+            if (modifiedYears.size === 0) return;
+
+            // Un solo file per tap: è l'unico modo affidabile su iPhone. Se ci sono più anni
+            // modificati, dopo il primo salvataggio il tasto resta visibile per il successivo.
+            const years = Array.from(modifiedYears).sort();
+            const year = years[0];
+
+            const yearTxs = allTransactions
+                .filter(t => t.date.getFullYear() === year)
+                .sort((a, b) => a.date - b.date);
+
+            const lines = yearTxs.map(t => JSON.stringify({
+                Data: t.rawDate,
+                Tipo: t.type,
+                Categoria: t.category,
+                Importo: t.amount.toString().replace('.', ','),
+                Note: t.notes || ''
+            }));
+
+            const content = lines.join('\n');
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${year}.txt`;
+            document.body.appendChild(a);
+            a.click(); // sincrono: deve restare qui, non in una callback/timeout
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+            modifiedYears.delete(year);
+            updateSaveButtonVisibility();
+
+            if (modifiedYears.size > 0) {
+                alert(`File ${year}.txt salvato. Ci sono altri anni con modifiche: tocca di nuovo Salva per il prossimo.`);
+            }
+        }
+
+        // ===== FILTRI DATABASE MOVIMENTI =====
+
+        function toggleDbFilter(which) {
+            const dataPanel = document.getElementById('db-filter-data');
+            const catPanel = document.getElementById('db-filter-categoria');
+
+            if (which === 'data') {
+                catPanel.classList.add('hidden');
+                dataPanel.classList.toggle('hidden');
+            } else if (which === 'categoria') {
+                dataPanel.classList.add('hidden');
+                populateCategorySelect();
+                catPanel.classList.toggle('hidden');
+            }
+        }
+
+        function populateCategorySelect() {
+            const select = document.getElementById('db-category-select');
+            const cats = Array.from(new Set([...categoriesList, ...allTransactions.map(t => t.category)]))
+                .filter(Boolean)
+                .sort((a, b) => a.localeCompare(b));
+            select.innerHTML = `<option value="">Tutte le categorie</option>` +
+                cats.map(c => `<option value="${c}" ${dbFilters.category === c ? 'selected' : ''}>${c}</option>`).join('');
+        }
+
+        function isAnyDbFilterActive() {
+            return !!(dbFilters.dateFrom || dbFilters.dateTo || dbFilters.category || dbFilters.noteQuery);
+        }
+
+        function updateResetButtonVisibility() {
+            document.getElementById('db-reset-btn').classList.toggle('hidden', !isAnyDbFilterActive());
+        }
+
+        function applyDbDateFilter() {
+            const fromVal = document.getElementById('db-date-from').value;
+            const toVal = document.getElementById('db-date-to').value;
+            dbFilters.dateFrom = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+            dbFilters.dateTo = toVal ? new Date(toVal + 'T23:59:59') : null;
+            document.getElementById('db-filter-data').classList.add('hidden');
+            updateResetButtonVisibility();
+            renderDatabaseTable();
+        }
+
+        function setDbSort(order) {
+            dbFilters.sortOrder = order;
+            document.getElementById('db-sort-desc').className = order === 'desc'
+                ? 'flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-sky-500 text-white'
+                : 'flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d]';
+            document.getElementById('db-sort-asc').className = order === 'asc'
+                ? 'flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-sky-500 text-white'
+                : 'flex-1 py-1.5 rounded-lg text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d]';
+        }
+
+        function applyDbCategoryFilter() {
+            const val = document.getElementById('db-category-select').value;
+            dbFilters.category = val || null;
+            document.getElementById('db-filter-categoria').classList.add('hidden');
+            updateResetButtonVisibility();
+            renderDatabaseTable();
+        }
+
+        function applyDbNoteFilter(val) {
+            dbFilters.noteQuery = val;
+            updateResetButtonVisibility();
+            renderDatabaseTable();
+        }
+
+        function resetDbFilters() {
+            dbFilters = { dateFrom: null, dateTo: null, sortOrder: 'desc', category: null, noteQuery: '' };
+            document.getElementById('db-date-from').value = '';
+            document.getElementById('db-date-to').value = '';
+            document.getElementById('db-note-search').value = '';
+            document.getElementById('db-category-select').value = '';
+            document.getElementById('db-filter-data').classList.add('hidden');
+            document.getElementById('db-filter-categoria').classList.add('hidden');
+            setDbSort('desc');
+            updateResetButtonVisibility();
+            renderDatabaseTable();
+        }
+
+        function toggleSidebar(show) {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full', !show);
+            document.getElementById('sidebar-overlay').classList.toggle('hidden', !show);
+        }
+
+        function navTo(view) {
+            document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            document.getElementById('period-selectors').classList.toggle('hidden', view === 'database' || view === 'riepilogo' || view === 'investimenti');
+            document.getElementById('db-header-controls').classList.toggle('hidden', view !== 'database');
+            document.getElementById('riepilogo-header-controls').classList.toggle('hidden', view !== 'riepilogo');
+            document.getElementById('investimenti-header-controls').classList.toggle('hidden', view !== 'investimenti');
+            toggleSidebar(false);
+        }
+
+        function switchSubOption(opt) {
+            currentSubOption = opt;
+            document.getElementById('btn-sub-totali').className = opt === 'TOTALI' ? 'flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-sky-500 text-white transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d] transition-all';
+            document.getElementById('btn-sub-categoria').className = opt === 'CATEGORIA' ? 'flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-sky-500 text-white transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d] transition-all';
+            
+            document.getElementById('sub-option-totali-view').classList.toggle('hidden', opt !== 'TOTALI');
+            document.getElementById('sub-option-categoria-view').classList.toggle('hidden', opt !== 'CATEGORIA');
+            document.getElementById('total-count-badge').classList.toggle('hidden', opt !== 'TOTALI');
+        }
+
+        // Stesso toggle, applicato al widget del Riepilogo Annuale (RIEPILOGO / CATEGORIA)
+        let currentRiepilogoSubOption = 'RIEPILOGO';
+        function switchRiepilogoSubOption(opt) {
+            currentRiepilogoSubOption = opt;
+            document.getElementById('btn-riep-sub-riepilogo').className = opt === 'RIEPILOGO' ? 'flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-sky-500 text-white transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d] transition-all';
+            document.getElementById('btn-riep-sub-categoria').className = opt === 'CATEGORIA' ? 'flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-sky-500 text-white transition-all' : 'flex-1 py-2.5 rounded-xl text-xs font-extrabold bg-[#161b22] text-slate-400 border border-[#30363d] transition-all';
+
+            document.getElementById('riep-sub-riepilogo-view').classList.toggle('hidden', opt !== 'RIEPILOGO');
+            document.getElementById('riep-sub-categoria-view').classList.toggle('hidden', opt !== 'CATEGORIA');
+        }
+
+        // SWIPE ADATTATO AI NUOVI TASTI INVERTITI
+        function setupSwipeGestures() {
+            const container = document.getElementById('swipe-container');
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            container.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            container.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, { passive: true });
+
+            function handleSwipe() {
+                const diff = touchStartX - touchEndX;
+                if (Math.abs(diff) > 40) {
+                    if (diff > 0 && currentSubOption === 'TOTALI') {
+                        switchSubOption('CATEGORIA'); // Swipe a sinistra -> passa a Categoria
+                    } else if (diff < 0 && currentSubOption === 'CATEGORIA') {
+                        switchSubOption('TOTALI'); // Swipe a destra -> passa a Totali
+                    }
+                }
+            }
+        }
+
+        // Registrazione Service Worker per funzionamento offline e installazione PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').catch(err => {
+                    console.warn('Registrazione service worker fallita:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
