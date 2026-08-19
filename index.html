@@ -391,22 +391,6 @@
         <!-- RIEPILOGO ANNUALE -->
         <section id="view-riepilogo" class="tab-view hidden space-y-4">
 
-            <!-- FASCIA RIEPILOGATIVA -->
-            <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-4 grid grid-cols-2 gap-3">
-                <div class="space-y-0.5">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Totale speso nell'anno</span>
-                    <div id="riep-tot-anno" class="text-xl font-black text-red-400">0,0€</div>
-                </div>
-                <div class="space-y-0.5">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mese con più spesa</span>
-                    <div id="riep-top-month" class="text-base font-extrabold text-red-400">-</div>
-                </div>
-                <div class="space-y-0.5">
-                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mese con meno spesa</span>
-                    <div id="riep-low-month" class="text-base font-extrabold text-emerald-400">-</div>
-                </div>
-            </div>
-
             <!-- WIDGET CON TOGGLE: RIEPILOGO (lista mensile) / CATEGORIA (griglia mese x categoria) -->
             <div class="bg-[#161b22] border border-[#30363d] rounded-3xl overflow-hidden shadow-xl">
 
@@ -419,46 +403,54 @@
 
                 <!-- PRIMA VISTA: RIEPILOGO (totali dell'anno + lista mensile) -->
                 <div id="riep-sub-riepilogo-view" class="p-4 space-y-4">
-                    <div class="flex gap-3">
+                    <div class="flex gap-2">
                         <div class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-0.5">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Speso nell'anno</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Uscita</span>
                             <div id="riep-widget-tot-spesa" class="text-lg font-black text-red-400">0,0€</div>
                         </div>
+                        <div id="riep-widget-box-investito" class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-0.5">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Investito</span>
+                            <div id="riep-widget-tot-investito" class="text-lg font-black text-[#cbd5e1]">0,0€</div>
+                        </div>
                         <div class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-0.5">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Guadagnato nell'anno</span>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Entrata</span>
                             <div id="riep-widget-tot-entrate" class="text-lg font-black text-emerald-400">0,0€</div>
                         </div>
                     </div>
-                    <table class="w-full text-sm">
-                        <thead>
-                            <tr class="text-slate-400 border-b border-[#30363d] font-bold">
-                                <th class="pb-3 text-left">Mese</th>
-                                <th class="pb-3 text-right">Speso</th>
-                            </tr>
-                        </thead>
-                        <tbody id="riep-monthly-list" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-slate-400 border-b border-[#30363d] font-bold">
+                                    <th class="pb-3 text-left whitespace-nowrap">Mese</th>
+                                    <th class="pb-3 text-right whitespace-nowrap">Uscita</th>
+                                    <th class="pb-3 text-right whitespace-nowrap">Entrata</th>
+                                    <th id="riep-th-investito" class="pb-3 text-right whitespace-nowrap">Investito</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riep-monthly-list" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- SECONDA VISTA: CATEGORIA (mese x categoria) -->
                 <div id="riep-sub-categoria-view" class="hidden p-3 overflow-x-auto">
                     <table class="riepilogo-grid text-center text-sm border-collapse">
                         <thead>
-                            <tr>
-                                <th class="bg-sky-500 text-white py-3 px-3 text-left font-black uppercase tracking-wide text-xs whitespace-nowrap">Categoria</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Gen</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Feb</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Mar</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Apr</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Mag</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Giu</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Lug</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Ago</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Set</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Ott</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Nov</th>
-                                <th class="bg-sky-500 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Dic</th>
-                                <th class="bg-sky-600 text-white py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Totale</th>
+                            <tr class="text-slate-400 border-b border-[#30363d]">
+                                <th class="bg-[#0d1117] py-3 px-3 text-left font-black uppercase tracking-wide text-xs whitespace-nowrap">Categoria</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Gen</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Feb</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Mar</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Apr</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Mag</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Giu</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Lug</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Ago</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Set</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Ott</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Nov</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap">Dic</th>
+                                <th class="bg-[#0d1117] py-3 px-3 font-black uppercase tracking-wide text-xs whitespace-nowrap text-sky-400">Totale</th>
                             </tr>
                         </thead>
                         <tbody id="riepilogo-table" class="divide-y divide-[#30363d]/50 font-medium"></tbody>
@@ -940,7 +932,7 @@
             const catIsIncome = {};
 
             yearTxs.forEach(t => {
-                if (t.type === 'Investito') return; // l'investito resta fuori dal riepilogo per categoria
+                if (t.type === 'Investito') return; // l'investito ha un conteggio separato, non entra nella tabella per categoria
                 if (!catMonthMap[t.category]) catMonthMap[t.category] = new Array(12).fill(0);
                 catMonthMap[t.category][t.date.getMonth()] += t.amount;
                 if (t.type === 'Entrata') catIsIncome[t.category] = true;
@@ -953,49 +945,46 @@
                 return a.localeCompare(b);
             });
 
-            // Dati per la fascia riepilogativa: solo categorie di spesa (esclude le entrate)
-            const monthTotals = new Array(12).fill(0);
-            let yearTotalSpent = 0;
+            // Totali mensili: uscita, entrata, investito (calcolati separatamente dalla tabella per categoria)
+            const monthExpense = new Array(12).fill(0);
+            const monthIncome = new Array(12).fill(0);
+            const monthInvestito = new Array(12).fill(0);
 
             cats.forEach(cat => {
-                if (catIsIncome[cat]) return;
                 const values = catMonthMap[cat];
-                const total = values.reduce((s, v) => s + v, 0);
-                yearTotalSpent += total;
-                values.forEach((v, i) => monthTotals[i] += v);
+                values.forEach((v, i) => {
+                    if (catIsIncome[cat]) monthIncome[i] += v;
+                    else monthExpense[i] += v;
+                });
+            });
+            yearTxs.forEach(t => {
+                if (t.type === 'Investito') monthInvestito[t.date.getMonth()] += t.amount;
             });
 
-            document.getElementById('riep-tot-anno').innerText = formatCurrency(yearTotalSpent);
+            const yearTotalSpent = monthExpense.reduce((s, v) => s + v, 0);
+            const yearTotalIncome = monthIncome.reduce((s, v) => s + v, 0);
+            const yearTotalInvestito = monthInvestito.reduce((s, v) => s + v, 0);
 
-            // Totale guadagnato nell'anno (somma delle entrate, es. Stipendio)
-            let yearTotalIncome = 0;
-            cats.forEach(cat => {
-                if (!catIsIncome[cat]) return;
-                yearTotalIncome += catMonthMap[cat].reduce((s, v) => s + v, 0);
-            });
+            // La colonna/box "Investito" compare solo se esiste almeno una transazione di quel tipo (come in Dashboard)
+            const hasInvestitoRiep = allTransactions.some(t => t.type === 'Investito');
+            document.getElementById('riep-widget-box-investito').classList.toggle('hidden', !hasInvestitoRiep);
+            document.getElementById('riep-th-investito').classList.toggle('hidden', !hasInvestitoRiep);
+
             document.getElementById('riep-widget-tot-spesa').innerText = formatCurrency(yearTotalSpent);
             document.getElementById('riep-widget-tot-entrate').innerText = formatCurrency(yearTotalIncome);
+            document.getElementById('riep-widget-tot-investito').innerText = formatCurrency(yearTotalInvestito);
 
             // Lista mensile (vista RIEPILOGO): un mese per riga, in stile Database Movimenti
             const monthlyList = document.getElementById('riep-monthly-list');
             if (monthlyList) {
-                monthlyList.innerHTML = monthTotals.map((v, i) => `
+                monthlyList.innerHTML = monthExpense.map((v, i) => `
                     <tr class="hover:bg-[#21262d]">
                         <td class="py-3 px-1 text-left font-semibold text-slate-200">${monthNames[i]}</td>
                         <td class="py-3 px-1 text-right font-bold ${v > 0 ? 'text-red-400' : 'text-slate-600'}">${formatCurrency(v)}</td>
+                        <td class="py-3 px-1 text-right font-bold ${monthIncome[i] > 0 ? 'text-emerald-400' : 'text-slate-600'}">${formatCurrency(monthIncome[i])}</td>
+                        <td class="riep-cell-investito py-3 px-1 text-right font-bold ${monthInvestito[i] > 0 ? 'text-[#cbd5e1]' : 'text-slate-600'} ${hasInvestitoRiep ? '' : 'hidden'}">${formatCurrency(monthInvestito[i])}</td>
                     </tr>
                 `).join('');
-            }
-
-            const monthsWithData = monthTotals.map((v, i) => ({ v, i })).filter(m => m.v > 0);
-            if (monthsWithData.length > 0) {
-                const maxMonth = monthsWithData.reduce((a, b) => b.v > a.v ? b : a);
-                const minMonth = monthsWithData.reduce((a, b) => b.v < a.v ? b : a);
-                document.getElementById('riep-top-month').innerText = `${monthNames[maxMonth.i]} · ${formatCurrency(maxMonth.v)}`;
-                document.getElementById('riep-low-month').innerText = `${monthNames[minMonth.i]} · ${formatCurrency(minMonth.v)}`;
-            } else {
-                document.getElementById('riep-top-month').innerText = '-';
-                document.getElementById('riep-low-month').innerText = '-';
             }
 
             cats.forEach(cat => {
