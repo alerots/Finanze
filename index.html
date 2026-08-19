@@ -404,15 +404,15 @@
                 <!-- PRIMA VISTA: RIEPILOGO (totali dell'anno + lista mensile) -->
                 <div id="riep-sub-riepilogo-view" class="p-4 space-y-4">
                     <div class="flex gap-2">
-                        <div class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-0.5">
+                        <div class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 flex items-center justify-between gap-2">
                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Uscita</span>
                             <div id="riep-widget-tot-spesa" class="text-lg font-black text-red-400">0,0€</div>
                         </div>
-                        <div id="riep-widget-box-investito" class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-0.5">
+                        <div id="riep-widget-box-investito" class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 flex items-center justify-between gap-2">
                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Investito</span>
-                            <div id="riep-widget-tot-investito" class="text-lg font-black text-[#cbd5e1]">0,0€</div>
+                            <div id="riep-widget-tot-investito" class="text-lg font-black text-[#eab308]">0,0€</div>
                         </div>
-                        <div class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 space-y-0.5">
+                        <div class="flex-1 bg-[#0d1117] border border-[#30363d] rounded-2xl p-3 flex items-center justify-between gap-2">
                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Entrata</span>
                             <div id="riep-widget-tot-entrate" class="text-lg font-black text-emerald-400">0,0€</div>
                         </div>
@@ -974,35 +974,35 @@
             document.getElementById('riep-widget-tot-entrate').innerText = formatCurrency(yearTotalIncome);
             document.getElementById('riep-widget-tot-investito').innerText = formatCurrency(yearTotalInvestito);
 
-            // Lista mensile (vista RIEPILOGO): un mese per riga, in stile Database Movimenti
+            // Lista mensile (vista RIEPILOGO): un mese per riga, in stile Database Movimenti.
+            // Dove l'importo è 0 la cella resta vuota invece di mostrare "0,0€"
             const monthlyList = document.getElementById('riep-monthly-list');
             if (monthlyList) {
                 monthlyList.innerHTML = monthExpense.map((v, i) => `
                     <tr class="hover:bg-[#21262d]">
                         <td class="py-3 px-1 text-left font-semibold text-slate-200">${monthNames[i]}</td>
-                        <td class="py-3 px-1 text-right font-bold ${v > 0 ? 'text-red-400' : 'text-slate-600'}">${formatCurrency(v)}</td>
-                        <td class="py-3 px-1 text-right font-bold ${monthIncome[i] > 0 ? 'text-emerald-400' : 'text-slate-600'}">${formatCurrency(monthIncome[i])}</td>
-                        <td class="riep-cell-investito py-3 px-1 text-right font-bold ${monthInvestito[i] > 0 ? 'text-[#cbd5e1]' : 'text-slate-600'} ${hasInvestitoRiep ? '' : 'hidden'}">${formatCurrency(monthInvestito[i])}</td>
+                        <td class="py-3 px-1 text-right font-bold text-red-400">${v ? formatCurrency(v) : ''}</td>
+                        <td class="py-3 px-1 text-right font-bold text-emerald-400">${monthIncome[i] ? formatCurrency(monthIncome[i]) : ''}</td>
+                        <td class="riep-cell-investito py-3 px-1 text-right font-bold text-[#eab308] ${hasInvestitoRiep ? '' : 'hidden'}">${monthInvestito[i] ? formatCurrency(monthInvestito[i]) : ''}</td>
                     </tr>
                 `).join('');
             }
 
-            cats.forEach(cat => {
+            // Tabella Categoria: le entrate (es. Stipendio) sono già riepilogate nel box "Entrata" sopra,
+            // quindi qui restano solo le categorie di spesa
+            cats.filter(cat => !catIsIncome[cat]).forEach(cat => {
                 const values = catMonthMap[cat];
                 const total = values.reduce((s, v) => s + v, 0);
-                const isInc = catIsIncome[cat];
 
                 // Mese con la spesa più alta per questa categoria, evidenziato in rosso
                 let maxIdx = -1, maxVal = 0;
-                if (!isInc) {
-                    values.forEach((v, i) => { if (v > maxVal) { maxVal = v; maxIdx = i; } });
-                }
+                values.forEach((v, i) => { if (v > maxVal) { maxVal = v; maxIdx = i; } });
 
                 tbody.innerHTML += `
-                    <tr class="${isInc ? 'bg-emerald-500/10' : ''} hover:bg-[#21262d]">
-                        <td class="sticky left-0 ${isInc ? 'bg-[#12281a]' : 'bg-[#161b22]'} py-2.5 px-3 text-left ${isInc ? 'font-black text-emerald-400' : 'font-semibold text-slate-200'} whitespace-nowrap z-10">${cat}</td>
+                    <tr class="hover:bg-[#21262d]">
+                        <td class="sticky left-0 bg-[#161b22] py-2.5 px-3 text-left font-semibold text-slate-200 whitespace-nowrap z-10">${cat}</td>
                         ${values.map((v, i) => `<td class="py-2.5 px-3 ${i === maxIdx ? 'text-red-400 font-black' : 'text-slate-300'}">${v ? formatCurrency(v) : ''}</td>`).join('')}
-                        <td class="py-2.5 px-3 font-bold ${isInc ? 'text-emerald-400' : 'text-red-400'}">${formatCurrency(total)}</td>
+                        <td class="py-2.5 px-3 font-bold text-slate-400">${formatCurrency(total)}</td>
                     </tr>
                 `;
             });
