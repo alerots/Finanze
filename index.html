@@ -690,6 +690,8 @@
                 if (hasInvestments) renderInvestmentsView();
 
                 renderAll();
+                renderDatabaseTable();
+                renderRiepilogoTable();
             });
         }
 
@@ -1060,8 +1062,6 @@
             renderDoubleDonutChart(monthInc, monthExp, monthInv, yearInc, yearExp, yearInv, hasInvestito);
             renderCategoryBarChart(monthTxs);
             renderSubTables(yearTxs, monthTxs);
-            renderDatabaseTable();
-            renderRiepilogoTable();
         }
 
         // DOPPIO ANELLO CONCENTRICO
@@ -1392,6 +1392,8 @@
             populateYearSelect();
             populateRiepilogoYearSelect();
             renderAll();
+            renderDatabaseTable();
+            renderRiepilogoTable();
         }
 
         function deleteTransactionConfirm(id) {
@@ -1407,6 +1409,8 @@
             populateYearSelect();
             populateRiepilogoYearSelect();
             renderAll();
+            renderDatabaseTable();
+            renderRiepilogoTable();
         }
 
         function updateSaveButtonVisibility() {
