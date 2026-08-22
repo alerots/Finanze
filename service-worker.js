@@ -1,6 +1,6 @@
 // Incrementa questo numero ogni volta che aggiorni index.html o gli altri file,
 // così il service worker capisce che deve scaricare la nuova versione.
-const CACHE_VERSION = 'v15';
+const CACHE_VERSION = 'v16';
 const CACHE_NAME = `finanze-app-cache-${CACHE_VERSION}`;
 
 // File dell'app (locali) da mettere in cache per il funzionamento offline
