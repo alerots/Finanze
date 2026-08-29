@@ -281,12 +281,12 @@
                                 <span id="lbl-y-inc" class="font-extrabold text-sky-400">0,0€</span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#f85149]"></span> Uscita:</span>
-                                <span id="lbl-y-exp" class="font-extrabold text-red-400">0,0€</span>
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#a855f7]"></span> Uscita:</span>
+                                <span id="lbl-y-exp" class="font-extrabold text-purple-400">0,0€</span>
                             </div>
                             <div id="row-y-inv" class="flex justify-between items-center">
-                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#eab308]"></span> Investito:</span>
-                                <span id="lbl-y-inv" class="font-extrabold text-[#eab308]">0,0€</span>
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#cbd5e1]"></span> Investito:</span>
+                                <span id="lbl-y-inv" class="font-extrabold text-[#cbd5e1]">0,0€</span>
                             </div>
                             <div class="pt-1 border-t border-[#30363d]/40 flex justify-between items-center">
                                 <span class="text-slate-400 font-bold">Risparmio:</span>
@@ -1141,26 +1141,31 @@
         };
 
         // Costruisce le fette di un ring in base al vero risparmio del periodo:
-        // il totale del cerchio è l'Entrata, rosso=Uscita, giallo=Investito, verde=quello che resta (Risparmio).
+        // il totale del cerchio è l'Entrata, una fetta per l'Uscita, una per l'Investito, una per quello che resta (Risparmio).
         // Se Uscita+Investito superano l'Entrata (risparmio negativo), il ring diventa tutto rosso come segnale d'allarme.
-        function buildBalanceRingSlices(entrata, uscita, investito, hasInvestito) {
+        function buildBalanceRingSlices(entrata, uscita, investito, hasInvestito, palette) {
             const speso = uscita + (hasInvestito ? investito : 0);
             if (entrata <= 0 || speso >= entrata) {
                 return { data: [1], colors: ['#f85149'] }; // tutto rosso: in negativo o senza entrate
             }
             const risparmio = entrata - speso;
             if (hasInvestito && investito > 0) {
-                return { data: [uscita, investito, risparmio], colors: ['#f85149', '#eab308', '#2ea043'] };
+                return { data: [uscita, investito, risparmio], colors: [palette.uscita, palette.investito, palette.risparmio] };
             }
-            return { data: [uscita, risparmio], colors: ['#f85149', '#2ea043'] };
+            return { data: [uscita, risparmio], colors: [palette.uscita, palette.risparmio] };
         }
 
         function renderDoubleDonutChart(mInc, mExp, mInv, yInc, yExp, yInv, hasInvestito) {
             const ctx = document.getElementById('fixedDonutChart').getContext('2d');
             if (donutChartInstance) donutChartInstance.destroy();
 
-            const yearSlices = buildBalanceRingSlices(yInc, yExp, yInv, hasInvestito);
-            const monthSlices = buildBalanceRingSlices(mInc, mExp, mInv, hasInvestito);
+            // Stessa logica per entrambi gli anelli, ma palette distinta così si riconoscono a colpo d'occhio:
+            // Anno = blu/viola/grigio (come prima), Mese = verde/rosso/ambra (come prima)
+            const yearPalette = { uscita: '#a855f7', investito: '#cbd5e1', risparmio: '#38bdf8' };
+            const monthPalette = { uscita: '#f85149', investito: '#eab308', risparmio: '#2ea043' };
+
+            const yearSlices = buildBalanceRingSlices(yInc, yExp, yInv, hasInvestito, yearPalette);
+            const monthSlices = buildBalanceRingSlices(mInc, mExp, mInv, hasInvestito, monthPalette);
 
             donutChartInstance = new Chart(ctx, {
                 type: 'doughnut',
