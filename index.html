@@ -1058,12 +1058,16 @@
             document.getElementById('lbl-m-inc').innerText = formatCurrency(monthInc);
             document.getElementById('lbl-m-exp').innerText = formatCurrency(monthExp);
             document.getElementById('lbl-m-inv').innerText = formatCurrency(monthInv);
-            document.getElementById('kpi-m-sav').innerText = formatCurrency(monthSav);
+            const kpiMSav = document.getElementById('kpi-m-sav');
+            kpiMSav.innerText = formatCurrency(monthSav);
+            kpiMSav.className = 'font-black ' + (monthSav >= 0 ? 'text-[#2ea043]' : 'text-[#f85149]');
 
             document.getElementById('lbl-y-inc').innerText = formatCurrency(yearInc);
             document.getElementById('lbl-y-exp').innerText = formatCurrency(yearExp);
             document.getElementById('lbl-y-inv').innerText = formatCurrency(yearInv);
-            document.getElementById('kpi-y-sav').innerText = formatCurrency(yearSav);
+            const kpiYSav = document.getElementById('kpi-y-sav');
+            kpiYSav.innerText = formatCurrency(yearSav);
+            kpiYSav.className = 'font-black ' + (yearSav >= 0 ? 'text-[#38bdf8]' : 'text-[#a855f7]');
 
             // "Investito" viene mostrato solo se esiste almeno una transazione di quel tipo in tutto il database
             const hasInvestito = allTransactions.some(t => t.type === 'Investito');
