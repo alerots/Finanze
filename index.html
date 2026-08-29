@@ -281,12 +281,12 @@
                                 <span id="lbl-y-inc" class="font-extrabold text-sky-400">0,0€</span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#a855f7]"></span> Uscita:</span>
-                                <span id="lbl-y-exp" class="font-extrabold text-purple-400">0,0€</span>
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#f85149]"></span> Uscita:</span>
+                                <span id="lbl-y-exp" class="font-extrabold text-red-400">0,0€</span>
                             </div>
                             <div id="row-y-inv" class="flex justify-between items-center">
-                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#cbd5e1]"></span> Investito:</span>
-                                <span id="lbl-y-inv" class="font-extrabold text-[#cbd5e1]">0,0€</span>
+                                <span class="text-slate-400 flex items-center gap-1 font-semibold"><span class="w-2 h-2 rounded-full bg-[#eab308]"></span> Investito:</span>
+                                <span id="lbl-y-inv" class="font-extrabold text-[#eab308]">0,0€</span>
                             </div>
                             <div class="pt-1 border-t border-[#30363d]/40 flex justify-between items-center">
                                 <span class="text-slate-400 font-bold">Risparmio:</span>
@@ -781,7 +781,7 @@
                 type: 'doughnut',
                 data: {
                     labels: fundData.map(f => f.fund),
-                    datasets: [{ data: fundData.map(f => f.principal), backgroundColor: colors, borderWidth: 0 }]
+                    datasets: [{ data: fundData.map(f => Math.max(0, f.principal)), backgroundColor: colors, borderWidth: 0 }]
                 },
                 options: commonOptions('Investito')
             });
@@ -1140,14 +1140,27 @@
             }
         };
 
+        // Costruisce le fette di un ring in base al vero risparmio del periodo:
+        // il totale del cerchio è l'Entrata, rosso=Uscita, giallo=Investito, verde=quello che resta (Risparmio).
+        // Se Uscita+Investito superano l'Entrata (risparmio negativo), il ring diventa tutto rosso come segnale d'allarme.
+        function buildBalanceRingSlices(entrata, uscita, investito, hasInvestito) {
+            const speso = uscita + (hasInvestito ? investito : 0);
+            if (entrata <= 0 || speso >= entrata) {
+                return { data: [1], colors: ['#f85149'] }; // tutto rosso: in negativo o senza entrate
+            }
+            const risparmio = entrata - speso;
+            if (hasInvestito && investito > 0) {
+                return { data: [uscita, investito, risparmio], colors: ['#f85149', '#eab308', '#2ea043'] };
+            }
+            return { data: [uscita, risparmio], colors: ['#f85149', '#2ea043'] };
+        }
+
         function renderDoubleDonutChart(mInc, mExp, mInv, yInc, yExp, yInv, hasInvestito) {
             const ctx = document.getElementById('fixedDonutChart').getContext('2d');
             if (donutChartInstance) donutChartInstance.destroy();
 
-            const yearData = hasInvestito ? [yInc, yExp, yInv] : [yInc, yExp];
-            const yearColors = hasInvestito ? ['#38bdf8', '#a855f7', '#cbd5e1'] : ['#38bdf8', '#a855f7'];
-            const monthData = hasInvestito ? [mInc, mExp, mInv] : [mInc, mExp];
-            const monthColors = hasInvestito ? ['#2ea043', '#f85149', '#eab308'] : ['#2ea043', '#f85149'];
+            const yearSlices = buildBalanceRingSlices(yInc, yExp, yInv, hasInvestito);
+            const monthSlices = buildBalanceRingSlices(mInc, mExp, mInv, hasInvestito);
 
             donutChartInstance = new Chart(ctx, {
                 type: 'doughnut',
@@ -1155,15 +1168,15 @@
                     datasets: [
                         {
                             label: 'Anno',
-                            data: yearData,
-                            backgroundColor: yearColors,
+                            data: yearSlices.data,
+                            backgroundColor: yearSlices.colors,
                             borderWidth: 0,
                             weight: 1.0
                         },
                         {
                             label: 'Mese',
-                            data: monthData,
-                            backgroundColor: monthColors,
+                            data: monthSlices.data,
+                            backgroundColor: monthSlices.colors,
                             borderWidth: 0,
                             weight: 1.5
                         }
