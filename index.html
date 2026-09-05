@@ -1150,7 +1150,9 @@
         function buildBalanceRingSlices(entrata, uscita, investito, hasInvestito, palette) {
             const speso = uscita + (hasInvestito ? investito : 0);
             if (entrata <= 0 || speso >= entrata) {
-                return { data: [1], colors: ['#f85149'] }; // tutto rosso: in negativo o senza entrate
+                // In negativo (o senza entrate): l'intero anello si tinge del colore "Uscita"
+                // della sua stessa palette, così mese e anno restano sempre distinguibili anche entrambi in rosso/viola
+                return { data: [1], colors: [palette.uscita] };
             }
             const risparmio = entrata - speso;
             if (hasInvestito && investito > 0) {
