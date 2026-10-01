@@ -60,38 +60,25 @@
         .welcome-fade-2 { animation: welcomeFadeUp 0.6s ease-out 0.3s both; }
 
 
-        /* ===== Schermata di benvenuto ===== */
-        #first-launch-modal { background: #0d1117; }
-        .welcome-glow { position: absolute; inset: 0; pointer-events: none;
-            background: radial-gradient(70% 42% at 88% 6%, rgba(56,189,248,.17), transparent 70%),
-                        radial-gradient(60% 38% at 4% 96%, rgba(168,85,247,.15), transparent 70%); }
-        .welcome-wrap { position: relative; width: 100%; max-width: 28rem; min-height: 100%; display: flex; flex-direction: column; justify-content: space-between; gap: 22px;
-            padding: max(20px, env(safe-area-inset-top)) 4px max(20px, env(safe-area-inset-bottom)); }
-        .welcome-fade-3 { animation: welcomeFadeUp 0.6s ease-out 0.45s both; }
-        .welcome-fade-4 { animation: welcomeFadeUp 0.6s ease-out 0.6s both; }
-        .welcome-date { font-size: 11px; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: #64748b; }
-        .welcome-tile { position: relative; width: 78px; height: 78px; border-radius: 26px; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto;
-            background: linear-gradient(145deg, rgba(56,189,248,.2), rgba(56,189,248,.04)); border: 1px solid rgba(56,189,248,.28); box-shadow: 0 14px 34px -12px rgba(56,189,248,.5); }
-        .welcome-input-wrap { position: relative; }
-        #greeting-input { width: 100%; background: transparent; text-align: center; color: #fff; font-weight: 800; font-size: clamp(22px, 7.2vw, 30px);
-            padding: 6px 30px 8px; border: 0; border-bottom: 2px dashed rgba(148,163,184,.28); border-radius: 0; outline: none; text-overflow: ellipsis; transition: border-color .25s ease; }
-        #greeting-input:focus { border-bottom: 2px solid #38bdf8; }
-        .welcome-pencil { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: #64748b; pointer-events: none; }
-        .welcome-glass { background: rgba(22,27,34,.85); border: 1px solid #30363d; border-radius: 22px; padding: 12px 16px; text-align: left; }
-        .wb-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
-        .wb-label { width: 64px; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #94a3b8; }
-        .wb-track { flex: 1; height: 9px; border-radius: 999px; background: #0d1117; overflow: hidden; }
-        .wb-bar { height: 100%; border-radius: 999px; transform-origin: left center; animation: wbGrow 1.3s cubic-bezier(.22,1,.36,1) both;
-            background: linear-gradient(90deg, rgba(var(--g), .5), rgb(var(--g))); box-shadow: 0 0 12px -2px rgba(var(--g), .6); }
-        @keyframes wbGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-        .welcome-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-        .welcome-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #94a3b8; padding: 6px 11px; border-radius: 999px; background: rgba(22,27,34,.85); border: 1px solid #30363d; }
+        /* ===== Schermata iniziale: sfondo con grafico in crescita ===== */
+        #first-launch-modal { background: linear-gradient(180deg, #0d1117 0%, #0a1630 100%); }
+        .welcome-bg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+        .wbg-bar { transform-box: fill-box; transform-origin: center bottom; animation: wbgGrow 1.2s cubic-bezier(.22,1,.36,1) both; animation-delay: calc(var(--i) * 70ms); }
+        @keyframes wbgGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+        .wbg-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: wbgDraw 2.2s cubic-bezier(.4,0,.2,1) .7s both; }
+        @keyframes wbgDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+        .wbg-pop { animation: wbgFade .6s ease-out both; animation-delay: var(--d, 2s); }
+        @keyframes wbgFade { from { opacity: 0; } to { opacity: 1; } }
+        .wbg-glow { animation: wbgPulse 2.8s ease-in-out 3s infinite; }
+        @keyframes wbgPulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
         .welcome-btn { position: relative; overflow: hidden; }
         .welcome-btn::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.28), transparent);
-            transform: translateX(-130%); animation: balSheen 3.6s ease-in-out 1.2s infinite; }
-        .welcome-btn:active { transform: scale(.98); }
+            transform: translateX(-130%); animation: balSheen 3.6s ease-in-out 1.4s infinite; }
+        #greeting-input { width: 100%; background: transparent; text-align: center; color: #fff; font-weight: 700; font-size: 24px; padding: 4px 8px 6px;
+            border: 0; border-bottom: 2px solid transparent; border-radius: 0; outline: none; text-overflow: ellipsis; transition: border-color .25s ease; }
+        #greeting-input:focus { border-bottom-color: #38bdf8; }
         @media (prefers-reduced-motion: reduce) {
-            .welcome-emoji, .welcome-fade-1, .welcome-fade-2, .welcome-fade-3, .welcome-fade-4, .wb-bar, .welcome-btn::after { animation: none !important; }
+            .welcome-emoji, .welcome-fade-1, .welcome-fade-2, .wbg-bar, .wbg-line, .wbg-pop, .wbg-glow, .welcome-btn::after { animation: none !important; }
         }
 
         body {
@@ -102,7 +89,7 @@
         }
 
         /* ===== BILANCIO: barre orizzontali animate (Annuale sopra, Mensile sotto) ===== */
-        #balance-stack { display: flex; flex-direction: column; gap: 12px; height: 560px; }
+        #balance-stack { display: flex; flex-direction: column; gap: 12px; height: 560px; margin-bottom: 16px; }
         .bal-card {
             --c-inc: #2ea043; --c-exp: #f85149; --c-inv: #eab308;
             --g-inc: 46,160,67; --g-exp: 248,81,73; --g-inv: 234,179,8;
@@ -125,7 +112,7 @@
         .bal-head { display: flex; align-items: center; justify-content: space-between; }
         .bal-title { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 13px; letter-spacing: .14em; color: #cbd5e1; }
         .bal-title svg { color: rgb(var(--g-acc)); }
-        .bal-period { font-weight: 800; font-size: 15px; color: rgb(var(--g-acc)); padding: 3px 12px; border-radius: 999px; background: rgba(var(--g-acc), .12); }
+        .bal-period { font-weight: 800; font-size: 18px; color: rgb(var(--g-acc)); padding: 5px 15px; border-radius: 999px; background: rgba(var(--g-acc), .12); }
 
         .bal-rows { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; padding: 8px 0; }
         .bal-row[data-k="inc"] { --g: var(--g-inc); }
@@ -212,44 +199,49 @@
     </div>
 
     <!-- MODAL PRIMO AVVIO -->
-    <div id="first-launch-modal" class="fixed inset-0 z-50 overflow-y-auto flex justify-center text-center px-6">
-        <div class="welcome-glow"></div>
-        <div class="welcome-wrap">
-            <div class="welcome-fade-1 welcome-date" id="welcome-date"></div>
-
-            <div class="space-y-6">
-                <div class="welcome-emoji welcome-tile">💸</div>
-
+    <div id="first-launch-modal" class="fixed inset-0 z-50 overflow-hidden">
+        <svg class="welcome-bg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+            <defs>
+                <linearGradient id="wbgBar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a95e0"/><stop offset="1" stop-color="#12315a" stop-opacity=".25"/></linearGradient>
+                <radialGradient id="wbgGlow"><stop offset="0" stop-color="#bae6fd"/><stop offset=".35" stop-color="#38bdf8" stop-opacity=".55"/><stop offset="1" stop-color="#38bdf8" stop-opacity="0"/></radialGradient>
+                <pattern id="wbgGrid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#38bdf8" stroke-opacity=".07" stroke-width="1"/></pattern>
+            </defs>
+            <rect width="400" height="800" fill="url(#wbgGrid)"/>
+            <rect class="wbg-bar" style="--i:0" x="22.0" y="650" width="20" height="150" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:1" x="53.5" y="590" width="20" height="210" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:2" x="85.0" y="630" width="20" height="170" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:3" x="116.5" y="540" width="20" height="260" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:4" x="148.0" y="570" width="20" height="230" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:5" x="179.5" y="480" width="20" height="320" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:6" x="211.0" y="520" width="20" height="280" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:7" x="242.5" y="440" width="20" height="360" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:8" x="274.0" y="470" width="20" height="330" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:9" x="305.5" y="390" width="20" height="410" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:10" x="337.0" y="420" width="20" height="380" fill="#1b3a66" opacity=".45"/><rect class="wbg-bar" style="--i:11" x="368.5" y="350" width="20" height="450" fill="#1b3a66" opacity=".45"/>
+            <rect class="wbg-bar" style="--i:0" x="12.0" y="710" width="20" height="90" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:1" x="43.5" y="650" width="20" height="150" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:2" x="75.0" y="675" width="20" height="125" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:3" x="106.5" y="600" width="20" height="200" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:4" x="138.0" y="630" width="20" height="170" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:5" x="169.5" y="555" width="20" height="245" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:6" x="201.0" y="590" width="20" height="210" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:7" x="232.5" y="505" width="20" height="295" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:8" x="264.0" y="545" width="20" height="255" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:9" x="295.5" y="465" width="20" height="335" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:10" x="327.0" y="500" width="20" height="300" rx="2" fill="url(#wbgBar)"/><rect class="wbg-bar" style="--i:11" x="358.5" y="415" width="20" height="385" rx="2" fill="url(#wbgBar)"/>
+            <polyline class="wbg-line" pathLength="1" points="30,640 120,500 180,545 255,415 315,450 385,265" fill="none" stroke="#5db4f5" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <g fill="#5db4f5">
+                <circle class="wbg-pop" style="--d:1.1s" cx="120" cy="500" r="4.5"/>
+                <circle class="wbg-pop" style="--d:1.6s" cx="180" cy="545" r="4.5"/>
+                <circle class="wbg-pop" style="--d:2.0s" cx="315" cy="450" r="4.5"/>
+            </g>
+            <g fill="none" stroke="#5db4f5" stroke-width="2">
+                <circle class="wbg-pop" style="--d:.8s" cx="30" cy="640" r="11"/>
+                <circle class="wbg-pop" style="--d:1.9s" cx="255" cy="415" r="11"/>
+            </g>
+            <circle class="wbg-pop" style="--d:.8s" cx="30" cy="640" r="4" fill="#5db4f5"/>
+            <circle class="wbg-pop" style="--d:1.9s" cx="255" cy="415" r="4" fill="#5db4f5"/>
+            <g class="wbg-pop" style="--d:2.7s">
+                <circle class="wbg-glow" cx="385" cy="265" r="26" fill="url(#wbgGlow)"/>
+                <path d="M351 276 L385 265 L388 300 M385 265 L350 262" fill="none" stroke="#7dd3fc" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+        </svg>
+        <div class="absolute inset-0 pointer-events-none" style="background: linear-gradient(180deg, #0d1117 0%, rgba(13,17,23,.75) 22%, rgba(13,17,23,0) 48%);"></div>
+        <div class="relative h-full max-w-md mx-auto w-full flex flex-col justify-between text-center px-6" style="padding-top: max(15vh, env(safe-area-inset-top)); padding-bottom: max(28px, env(safe-area-inset-bottom));">
+            <div class="space-y-8">
+                <div class="welcome-emoji w-16 h-16 bg-sky-500/10 text-sky-400 rounded-2xl flex items-center justify-center mx-auto text-4xl">
+                    💸
+                </div>
                 <div class="welcome-fade-1">
-                    <div class="welcome-input-wrap">
-                        <input type="text" id="greeting-input" maxlength="40" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="done"
-                            placeholder="Benvenuto!" aria-label="Frase di benvenuto"
-                            onchange="saveGreeting()" onblur="saveGreeting()"
-                            onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">
-                        <i data-lucide="pencil" class="welcome-pencil w-4 h-4"></i>
-                    </div>
-                    <p class="text-sm text-slate-500 mt-3">Il tuo bilancio, sempre in tasca.</p>
-                </div>
-
-                <div class="welcome-fade-2 welcome-glass">
-                    <div class="wb-row" style="--g:46,160,67"><span class="wb-label">Entrate</span><div class="wb-track"><div class="wb-bar" style="width:82%;animation-delay:.5s"></div></div></div>
-                    <div class="wb-row" style="--g:248,81,73"><span class="wb-label">Uscite</span><div class="wb-track"><div class="wb-bar" style="width:56%;animation-delay:.65s"></div></div></div>
-                    <div class="wb-row" style="--g:234,179,8"><span class="wb-label">Investito</span><div class="wb-track"><div class="wb-bar" style="width:24%;animation-delay:.8s"></div></div></div>
-                </div>
-
-                <div class="welcome-fade-3 welcome-chips">
-                    <span class="welcome-chip"><i data-lucide="lock" class="w-3.5 h-3.5 text-emerald-400"></i>Dati solo sul tuo iPhone</span>
-                    <span class="welcome-chip"><i data-lucide="wifi-off" class="w-3.5 h-3.5 text-sky-400"></i>Funziona offline</span>
+                    <input type="text" id="greeting-input" maxlength="40" autocomplete="off" autocapitalize="sentences" spellcheck="false" enterkeyhint="done"
+                        placeholder="Benvenuto!" aria-label="Frase di benvenuto"
+                        onchange="saveGreeting()" onblur="saveGreeting()"
+                        onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">
                 </div>
             </div>
-
-            <div class="welcome-fade-4 space-y-3">
-                <button onclick="confirmUserNameAndStart()" class="welcome-btn w-full py-4 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-2xl text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25">
-                    <i data-lucide="play" class="w-5 h-5"></i> Avvia App
-                </button>
-                <p class="text-xs text-slate-500">Scegli la cartella con i tuoi file .txt</p>
-                <p id="welcome-last" class="text-[11px] text-slate-600 hidden"></p>
-            </div>
+            <button onclick="confirmUserNameAndStart()" class="welcome-btn welcome-fade-2 w-full py-6 bg-sky-500 hover:bg-sky-600 text-white font-extrabold rounded-3xl text-lg uppercase tracking-wider transition-all flex items-center justify-center gap-3 shadow-xl shadow-sky-500/30">
+                <i data-lucide="play" class="w-7 h-7"></i> Avvia App
+            </button>
         </div>
     </div>
 
@@ -685,17 +677,6 @@
 
             // Frase di benvenuto: interamente modificabile e salvata su questo telefono
             document.getElementById('greeting-input').value = loadGreeting();
-            document.getElementById('welcome-date').textContent =
-                new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
-            try {
-                const last = JSON.parse(localStorage.getItem('financeAppLastLoad') || 'null');
-                if (last && last.t) {
-                    const when = new Date(last.t).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                    const el = document.getElementById('welcome-last');
-                    el.textContent = `Ultimo caricamento: ${when} · ${last.n} movimenti`;
-                    el.classList.remove('hidden');
-                }
-            } catch (err) {}
         });
 
         const GREETING_KEY = 'financeAppGreeting';
@@ -800,7 +781,6 @@
                     currentMonth = latestTx.date.getMonth();
                 }
 
-                try { localStorage.setItem('financeAppLastLoad', JSON.stringify({ t: Date.now(), n: allTransactions.length })); } catch (err) {}
                 document.getElementById('first-launch-modal').classList.add('hidden');
                 populateYearSelect();
                 populateRiepilogoYearSelect();
@@ -1242,8 +1222,9 @@
             const wrap = document.getElementById('balance-stack');
             if (!wrap || wrap.offsetParent === null) return;
             const top = wrap.getBoundingClientRect().top + window.scrollY;
-            const padBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
-            const h = window.innerHeight - top - padBottom - 12;
+            // Il bordo basso arriva quasi a fine schermo (sopra la barra home di iPhone):
+            // il widget successivo parte sotto e si vede solo scorrendo
+            const h = window.innerHeight - top - 20;
             wrap.style.height = Math.max(h, 540) + 'px';
         }
 
