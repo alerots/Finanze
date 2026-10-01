@@ -236,79 +236,77 @@
         <!-- DASHBOARD -->
         <section id="view-dashboard" class="tab-view space-y-6">
             
-            <!-- BILANCIO: widget annuale + mensile -->
-            <div class="space-y-4">
+            <!-- BILANCIO: ANNUALE + MENSILE (entrambi visibili all'apertura) -->
+            <div class="grid grid-cols-2 gap-3 items-stretch">
                 <!-- WIDGET ANNUALE -->
-                <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-4 sm:p-5 shadow-xl">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-400"></i>
-                        <h3 class="text-base font-black text-slate-200 uppercase tracking-widest">
-                            BILANCIO <span id="balance-year-title" class="text-sky-400">2026</span>
-                        </h3>
+                <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-4 shadow-xl flex flex-col min-w-0">
+                    <h3 class="text-[13px] sm:text-sm font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
+                        <i data-lucide="pie-chart" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0"></i>
+                        <span>BILANCIO</span> <span id="balance-year-title" class="text-sky-400">2026</span>
+                    </h3>
+
+                    <div class="mt-3 rounded-2xl bg-[#0d1117] border border-[#30363d] p-3 text-center">
+                        <div class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Saldo netto</div>
+                        <div id="balance-year-net" class="mt-1 text-[20px] sm:text-[24px] leading-none font-black text-sky-400">0,0€</div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-[minmax(190px,230px)_1fr] gap-4 sm:gap-5 items-center">
-                        <div class="relative h-52 sm:h-56 w-full flex items-center justify-center">
-                            <canvas id="yearBalanceChart"></canvas>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-8 text-center">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Saldo netto</span>
-                                <span id="year-balance-center" class="mt-1 text-xl sm:text-2xl font-black text-purple-400 leading-tight">0,0€</span>
-                            </div>
+
+                    <div class="mt-3 space-y-2 text-[11px] sm:text-xs">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>Entrate</span>
+                            <span id="balance-year-inc" class="font-extrabold text-emerald-400 whitespace-nowrap">0,0€</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-2.5">
-                            <div class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-3">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>Entrate</div>
-                                <div id="lbl-y-inc" class="mt-1 text-base font-black text-emerald-400">0,0€</div>
-                            </div>
-                            <div class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-3">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>Uscite</div>
-                                <div id="lbl-y-exp" class="mt-1 text-base font-black text-red-400">0,0€</div>
-                            </div>
-                            <div id="row-y-inv" class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-3">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>Investito</div>
-                                <div id="lbl-y-inv" class="mt-1 text-base font-black text-yellow-400">0,0€</div>
-                            </div>
-                            <div class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-3">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span><span id="year-balance-label">Saldo</span></div>
-                                <div id="kpi-y-sav" class="mt-1 text-base font-black text-purple-400">0,0€</div>
-                            </div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>Uscite</span>
+                            <span id="balance-year-exp" class="font-extrabold text-red-400 whitespace-nowrap">0,0€</span>
                         </div>
+                        <div id="balance-year-inv-row" class="flex items-center justify-between gap-2">
+                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-yellow-400 shrink-0"></span>Investito</span>
+                            <span id="balance-year-inv" class="font-extrabold text-yellow-400 whitespace-nowrap">0,0€</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-3">
+                        <div class="h-1.5 rounded-full bg-[#30363d] overflow-hidden flex">
+                            <span id="balance-year-exp-bar" class="bg-red-400 h-full" style="width:0%"></span>
+                            <span id="balance-year-inv-bar" class="bg-yellow-400 h-full" style="width:0%"></span>
+                        </div>
+                        <div class="mt-1.5 text-[9px] sm:text-[10px] text-slate-500 text-center uppercase tracking-wider">Uscite + investimenti</div>
                     </div>
                 </div>
 
                 <!-- WIDGET MENSILE -->
-                <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-4 sm:p-5 shadow-xl">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-400"></i>
-                        <h3 class="text-base font-black text-slate-200 uppercase tracking-widest">
-                            BILANCIO <span id="balance-month-title" class="text-sky-400">GENNAIO</span>
-                        </h3>
+                <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-4 shadow-xl flex flex-col min-w-0">
+                    <h3 class="text-[13px] sm:text-sm font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
+                        <i data-lucide="pie-chart" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0"></i>
+                        <span>BILANCIO</span> <span id="balance-month-title" class="text-sky-400">SETTEMBRE</span>
+                    </h3>
+
+                    <div class="mt-3 rounded-2xl bg-[#0d1117] border border-[#30363d] p-3 text-center">
+                        <div class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Saldo netto</div>
+                        <div id="balance-month-net" class="mt-1 text-[20px] sm:text-[24px] leading-none font-black text-sky-400">0,0€</div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-[minmax(190px,230px)_1fr] gap-4 sm:gap-5 items-center">
-                        <div class="relative h-52 sm:h-56 w-full flex items-center justify-center">
-                            <canvas id="monthBalanceChart"></canvas>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-8 text-center">
-                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Saldo netto</span>
-                                <span id="month-balance-center" class="mt-1 text-xl sm:text-2xl font-black text-red-400 leading-tight">0,0€</span>
-                            </div>
+
+                    <div class="mt-3 space-y-2 text-[11px] sm:text-xs">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>Entrate</span>
+                            <span id="balance-month-inc" class="font-extrabold text-emerald-400 whitespace-nowrap">0,0€</span>
                         </div>
-                        <div class="grid grid-cols-2 gap-2.5">
-                            <div class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-3">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>Entrate</div>
-                                <div id="lbl-m-inc" class="mt-1 text-base font-black text-emerald-400">0,0€</div>
-                            </div>
-                            <div class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-3">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-red-400"></span>Uscite</div>
-                                <div id="lbl-m-exp" class="mt-1 text-base font-black text-red-400">0,0€</div>
-                            </div>
-                            <div id="row-m-inv" class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-3">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>Investito</div>
-                                <div id="lbl-m-inv" class="mt-1 text-base font-black text-yellow-400">0,0€</div>
-                            </div>
-                            <div class="bg-[#0d1117] rounded-2xl border border-[#30363d] p-3">
-                                <div class="flex items-center gap-2 text-xs font-semibold text-slate-400"><span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span><span id="month-balance-label">Saldo</span></div>
-                                <div id="kpi-m-sav" class="mt-1 text-base font-black text-red-400">0,0€</div>
-                            </div>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>Uscite</span>
+                            <span id="balance-month-exp" class="font-extrabold text-red-400 whitespace-nowrap">0,0€</span>
                         </div>
+                        <div id="balance-month-inv-row" class="flex items-center justify-between gap-2">
+                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-yellow-400 shrink-0"></span>Investito</span>
+                            <span id="balance-month-inv" class="font-extrabold text-yellow-400 whitespace-nowrap">0,0€</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-3">
+                        <div class="h-1.5 rounded-full bg-[#30363d] overflow-hidden flex">
+                            <span id="balance-month-exp-bar" class="bg-red-400 h-full" style="width:0%"></span>
+                            <span id="balance-month-inv-bar" class="bg-yellow-400 h-full" style="width:0%"></span>
+                        </div>
+                        <div class="mt-1.5 text-[9px] sm:text-[10px] text-slate-500 text-center uppercase tracking-wider">Uscite + investimenti</div>
                     </div>
                 </div>
             </div>
@@ -558,8 +556,7 @@
         let currentRiepilogoYear = '2026';
         let currentSubOption = 'TOTALI'; // Impostata di default su TOTALI
 
-        let yearBalanceChartInstance = null;
-        let monthBalanceChartInstance = null;
+        let donutChartInstance = null;
         let barChartInstance = null;
         let investChartInstance = null;
         let investRingChartInstance = null;
@@ -1070,111 +1067,45 @@
 
             // Aggiorna Badge Periodo Selezione
             document.getElementById('current-period-badge').innerText = `${monthNames[currentMonth].toUpperCase()} ${currentYear}`;
-            document.getElementById('balance-year-title').innerText = currentYear;
-            document.getElementById('balance-month-title').innerText = monthNames[currentMonth].toUpperCase();
 
-            // Aggiorna valori nei box distinti
-            document.getElementById('lbl-m-inc').innerText = formatCurrency(monthInc);
-            document.getElementById('lbl-m-exp').innerText = formatCurrency(monthExp);
-            document.getElementById('lbl-m-inv').innerText = formatCurrency(monthInv);
-            const kpiMSav = document.getElementById('kpi-m-sav');
-            kpiMSav.innerText = formatCurrency(monthSav);
-            kpiMSav.className = 'mt-1 text-base font-black ' + (monthSav >= 0 ? 'text-emerald-400' : 'text-red-400');
-            document.getElementById('month-balance-center').innerText = formatCurrency(monthSav);
-            document.getElementById('month-balance-center').className = 'mt-1 text-xl sm:text-2xl font-black leading-tight ' + (monthSav >= 0 ? 'text-emerald-400' : 'text-red-400');
-            document.getElementById('month-balance-label').innerText = monthSav >= 0 ? 'Risparmio' : 'Disavanzo';
-
-            document.getElementById('lbl-y-inc').innerText = formatCurrency(yearInc);
-            document.getElementById('lbl-y-exp').innerText = formatCurrency(yearExp);
-            document.getElementById('lbl-y-inv').innerText = formatCurrency(yearInv);
-            const kpiYSav = document.getElementById('kpi-y-sav');
-            kpiYSav.innerText = formatCurrency(yearSav);
-            kpiYSav.className = 'mt-1 text-base font-black ' + (yearSav >= 0 ? 'text-sky-400' : 'text-purple-400');
-            document.getElementById('year-balance-center').innerText = formatCurrency(yearSav);
-            document.getElementById('year-balance-center').className = 'mt-1 text-xl sm:text-2xl font-black leading-tight ' + (yearSav >= 0 ? 'text-sky-400' : 'text-purple-400');
-            document.getElementById('year-balance-label').innerText = yearSav >= 0 ? 'Risparmio' : 'Disavanzo';
-
-            // "Investito" viene mostrato solo se esiste almeno una transazione di quel tipo in tutto il database
-            const hasInvestito = allTransactions.some(t => t.type === 'Investito');
-            document.getElementById('row-m-inv').classList.toggle('hidden', !hasInvestito);
-            document.getElementById('row-y-inv').classList.toggle('hidden', !hasInvestito);
-
-            renderDoubleDonutChart(monthInc, monthExp, monthInv, yearInc, yearExp, yearInv, hasInvestito);
+            renderBalanceWidgets(yearInc, yearExp, yearInv, yearSav, monthInc, monthExp, monthInv, monthSav);
             renderCategoryBarChart(monthTxs);
             renderSubTables(yearTxs, monthTxs);
         }
 
-        // GRAFICI BILANCIO: un widget per anno e uno per mese.
-        // Se il saldo è positivo, il ring mostra Uscite + Investimenti + Risparmio.
-        // Se il saldo è negativo, il ring mostra Uscite + Investimenti + Disavanzo.
-        function buildBalanceSlices(entrata, uscita, investito) {
-            const saldo = entrata - uscita - investito;
-            if (entrata <= 0 && uscita <= 0 && investito <= 0) {
-                return { data: [1], colors: ['#30363d'], labels: ['Nessun dato'] };
-            }
+        // WIDGET BILANCIO: visualizza il flusso Entrate -> Uscite/Investimenti -> Saldo.
+        // I due periodi sono separati e completamente visibili all'apertura della dashboard.
+        function updateBalanceWidget(prefix, inc, exp, inv, net, monthLabel = null) {
+            const titleEl = document.getElementById(`balance-${prefix}-title`);
+            const netEl = document.getElementById(`balance-${prefix}-net`);
+            const incEl = document.getElementById(`balance-${prefix}-inc`);
+            const expEl = document.getElementById(`balance-${prefix}-exp`);
+            const invRow = document.getElementById(`balance-${prefix}-inv-row`);
+            const invEl = document.getElementById(`balance-${prefix}-inv`);
+            const expBar = document.getElementById(`balance-${prefix}-exp-bar`);
+            const invBar = document.getElementById(`balance-${prefix}-inv-bar`);
 
-            if (saldo >= 0) {
-                const slices = [];
-                const colors = [];
-                const labels = [];
-                if (uscita > 0) { slices.push(uscita); colors.push('#f85149'); labels.push('Uscite'); }
-                if (investito > 0) { slices.push(investito); colors.push('#eab308'); labels.push('Investimenti'); }
-                if (saldo > 0) { slices.push(saldo); colors.push('#2ea043'); labels.push('Risparmio'); }
-                return { data: slices.length ? slices : [1], colors: colors.length ? colors : ['#30363d'], labels: labels.length ? labels : ['Nessun dato'] };
-            }
+            if (monthLabel !== null) titleEl.innerText = monthLabel.toUpperCase();
 
-            const deficit = Math.abs(saldo);
-            const slices = [];
-            const colors = [];
-            const labels = [];
-            if (uscita > 0) { slices.push(uscita); colors.push('#f85149'); labels.push('Uscite'); }
-            if (investito > 0) { slices.push(investito); colors.push('#eab308'); labels.push('Investimenti'); }
-            slices.push(deficit); colors.push('#a855f7'); labels.push('Disavanzo');
-            return { data: slices, colors, labels };
+            netEl.innerText = formatCurrency(net);
+            netEl.className = 'mt-1 text-[20px] sm:text-[24px] leading-none font-black ' + (net >= 0 ? 'text-emerald-400' : 'text-red-400');
+            incEl.innerText = formatCurrency(inc);
+            expEl.innerText = formatCurrency(exp);
+            invEl.innerText = formatCurrency(inv);
+
+            // L'investimento compare solo nel periodo in cui esiste davvero un investimento.
+            const hasInvestment = inv > 0;
+            invRow.classList.toggle('hidden', !hasInvestment);
+            invBar.classList.toggle('hidden', !hasInvestment);
+
+            const denominator = Math.max(inc, exp + inv, 1);
+            expBar.style.width = `${Math.min((exp / denominator) * 100, 100)}%`;
+            invBar.style.width = `${hasInvestment ? Math.min((inv / denominator) * 100, 100) : 0}%`;
         }
 
-        function renderBalanceChart(canvasId, instanceName, entrata, uscita, investito) {
-            const canvas = document.getElementById(canvasId);
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            if (instanceName === 'year' && yearBalanceChartInstance) yearBalanceChartInstance.destroy();
-            if (instanceName === 'month' && monthBalanceChartInstance) monthBalanceChartInstance.destroy();
-
-            const slices = buildBalanceSlices(entrata, uscita, investito);
-            const instance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: slices.labels,
-                    datasets: [{
-                        data: slices.data,
-                        backgroundColor: slices.colors,
-                        borderWidth: 0,
-                        hoverOffset: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '68%',
-                    plugins: {
-                        legend: { display: false },
-                        datalabels: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: (context) => ` ${context.label}: ${formatCurrency(context.raw)}`
-                            }
-                        }
-                    }
-                }
-            });
-
-            if (instanceName === 'year') yearBalanceChartInstance = instance;
-            else monthBalanceChartInstance = instance;
-        }
-
-        function renderDoubleDonutChart(mInc, mExp, mInv, yInc, yExp, yInv) {
-            renderBalanceChart('yearBalanceChart', 'year', yInc, yExp, yInv);
-            renderBalanceChart('monthBalanceChart', 'month', mInc, mExp, mInv);
+        function renderBalanceWidgets(yInc, yExp, yInv, yNet, mInc, mExp, mInv, mNet) {
+            updateBalanceWidget('year', yInc, yExp, yInv, yNet, String(currentYear));
+            updateBalanceWidget('month', mInc, mExp, mInv, mNet, monthNames[currentMonth]);
         }
 
         // GRAFICO BARRE ORIZZONTALI PER CATEGORIA
