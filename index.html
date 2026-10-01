@@ -18,7 +18,7 @@
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 
     <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -41,9 +41,9 @@
     </script>
 
     <!-- Chart.js, Datalabels & Lucide Icons CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide@0.468.0"></script>
 
     <style>
         /* Piccole animazioni per la schermata di benvenuto: comparsa morbida + emoji che fluttua */
@@ -65,6 +65,71 @@
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
+
+        /* ===== BILANCIO: barre orizzontali animate (Annuale sopra, Mensile sotto) ===== */
+        #balance-stack { display: flex; flex-direction: column; gap: 12px; height: 560px; }
+        .bal-card {
+            --c-inc: #2ea043; --c-exp: #f85149; --c-inv: #eab308;
+            --g-inc: 46,160,67; --g-exp: 248,81,73; --g-inv: 234,179,8;
+            position: relative; overflow: hidden; flex: 1 1 0; min-height: 0;
+            display: flex; flex-direction: column; padding: 16px 18px 14px;
+            border-radius: 24px; border: 1px solid #30363d;
+            background: radial-gradient(120% 80% at 0% 0%, rgba(var(--g-inc), .11), transparent 60%), #161b22;
+            box-shadow: 0 12px 32px -14px rgba(0,0,0,.7);
+        }
+        .bal-y { --c-inc: #38bdf8; --c-exp: #a855f7; --c-inv: #cbd5e1; --g-inc: 56,189,248; --g-exp: 168,85,247; --g-inv: 203,213,225; }
+        .bal-card.enter { animation: balIn .75s cubic-bezier(.22,1,.36,1) both; }
+        @keyframes balIn { from { opacity: 0; transform: translateY(18px) scale(.97); } to { opacity: 1; transform: none; } }
+        @keyframes balSwap { from { opacity: 0; transform: translateY(-7px); } to { opacity: 1; transform: none; } }
+        @keyframes balSheen { from { transform: translateX(-120%); } to { transform: translateX(260%); } }
+        @keyframes balPop { 0% { transform: scale(1); } 35% { transform: scale(1.07); } 100% { transform: scale(1); } }
+        .bal-swap { animation: balSwap .45s cubic-bezier(.22,1,.36,1); }
+        .bal-pop { animation: balPop .5s cubic-bezier(.22,1,.36,1); }
+
+        .bal-head { display: flex; align-items: center; justify-content: space-between; }
+        .bal-title { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 13px; letter-spacing: .14em; color: #cbd5e1; }
+        .bal-title svg { color: rgb(var(--g-inc)); }
+        .bal-period { font-weight: 800; font-size: 15px; color: rgb(var(--g-inc)); padding: 3px 12px; border-radius: 999px; background: rgba(var(--g-inc), .12); }
+
+        .bal-rows { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: space-evenly; padding: 8px 0; }
+        .bal-row[data-k="inc"] { --g: var(--g-inc); }
+        .bal-row[data-k="exp"] { --g: var(--g-exp); }
+        .bal-row[data-k="inv"] { --g: var(--g-inv); }
+        .bal-line { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+        .bal-label { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: #94a3b8; }
+        .bal-dot { width: 8px; height: 8px; border-radius: 50%; background: rgb(var(--g)); box-shadow: 0 0 8px rgba(var(--g), .8); }
+        .bal-amt { font-size: 19px; font-weight: 800; color: rgb(var(--g)); font-variant-numeric: tabular-nums; }
+        .bal-track { position: relative; height: 16px; border-radius: 999px; background: #0d1117; border: 1px solid #21262d; }
+        .bal-fill {
+            position: relative; overflow: hidden; height: 100%; width: 0; border-radius: 999px;
+            background: linear-gradient(90deg, rgba(var(--g), .5), rgb(var(--g)));
+            box-shadow: 0 0 14px -2px rgba(var(--g), .65);
+            transition: width 1.1s cubic-bezier(.22,1,.36,1);
+        }
+        .bal-fill::after {
+            content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 45%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent);
+            transform: translateX(-120%);
+        }
+        .bal-fill.sheen::after { animation: balSheen 1.3s ease-out .5s both; }
+        /* Tacca "livello entrate": le barre che la superano indicano che si spende più di quanto entra */
+        .bal-mark {
+            position: absolute; top: -4px; bottom: -4px; left: 0; width: 2px; border-radius: 2px; z-index: 2;
+            background: rgba(255,255,255,.75); opacity: 0;
+            transition: left 1.1s cubic-bezier(.22,1,.36,1), opacity .6s ease;
+        }
+
+        .bal-foot { --sg: 56,189,248; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 11px; border-top: 1px solid rgba(48,54,61,.8); }
+        .bal-foot-l { display: flex; flex-direction: column; line-height: 1.1; }
+        .bal-foot-label { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; }
+        .bal-sav { font-size: 30px; font-weight: 900; color: rgb(var(--sg)); font-variant-numeric: tabular-nums; transition: color .5s ease; text-shadow: 0 0 18px rgba(var(--sg), .35); white-space: nowrap; }
+        .bal-pill { font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 999px; color: rgb(var(--sg)); background: rgba(var(--sg), .15); transition: color .5s ease, background .5s ease; white-space: nowrap; }
+
+        @media (prefers-reduced-motion: reduce) {
+            .bal-card.enter, .bal-swap, .bal-pop, .bal-fill.sheen::after { animation: none !important; }
+            .bal-fill, .bal-mark { transition-duration: .01s !important; }
+        }
+
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -236,77 +301,54 @@
         <!-- DASHBOARD -->
         <section id="view-dashboard" class="tab-view space-y-6">
             
-            <!-- BILANCIO: ANNUALE + MENSILE (entrambi visibili all'apertura) -->
-            <div class="grid grid-cols-2 gap-3 items-stretch">
-                <!-- WIDGET ANNUALE -->
-                <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-4 shadow-xl flex flex-col min-w-0">
-                    <h3 class="text-[13px] sm:text-sm font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
-                        <i data-lucide="pie-chart" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0"></i>
-                        <span>BILANCIO</span> <span id="balance-year-title" class="text-sky-400">2026</span>
-                    </h3>
-
-                    <div class="mt-3 rounded-2xl bg-[#0d1117] border border-[#30363d] p-3 text-center">
-                        <div class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Saldo netto</div>
-                        <div id="balance-year-net" class="mt-1 text-[20px] sm:text-[24px] leading-none font-black text-sky-400">0,0€</div>
+            <!-- BILANCIO: ANNUALE (sopra) + MENSILE (sotto), insieme riempiono lo schermo -->
+            <div id="balance-stack">
+                <div id="bal-card-y" class="bal-card bal-y enter" style="animation-delay:0ms">
+                    <div class="bal-head">
+                        <div class="bal-title"><i data-lucide="calendar-range" class="w-4 h-4"></i><span>ANNUALE</span></div>
+                        <div id="bal-y-period" class="bal-period">2026</div>
                     </div>
-
-                    <div class="mt-3 space-y-2 text-[11px] sm:text-xs">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>Entrate</span>
-                            <span id="balance-year-inc" class="font-extrabold text-emerald-400 whitespace-nowrap">0,0€</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>Uscite</span>
-                            <span id="balance-year-exp" class="font-extrabold text-red-400 whitespace-nowrap">0,0€</span>
-                        </div>
-                        <div id="balance-year-inv-row" class="flex items-center justify-between gap-2">
-                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-yellow-400 shrink-0"></span>Investito</span>
-                            <span id="balance-year-inv" class="font-extrabold text-yellow-400 whitespace-nowrap">0,0€</span>
-                        </div>
+                    <div class="bal-rows">
+                    <div class="bal-row" data-k="inc">
+                        <div class="bal-line"><span class="bal-label"><i class="bal-dot"></i>Entrata</span><span class="bal-amt" id="bal-y-inc-amt">0,0€</span></div>
+                        <div class="bal-track"><div class="bal-fill" id="bal-y-inc-fill"></div></div>
                     </div>
-
-                    <div class="mt-auto pt-3">
-                        <div class="h-1.5 rounded-full bg-[#30363d] overflow-hidden flex">
-                            <span id="balance-year-exp-bar" class="bg-red-400 h-full" style="width:0%"></span>
-                            <span id="balance-year-inv-bar" class="bg-yellow-400 h-full" style="width:0%"></span>
-                        </div>
-                        <div class="mt-1.5 text-[9px] sm:text-[10px] text-slate-500 text-center uppercase tracking-wider">Uscite + investimenti</div>
+                    <div class="bal-row" data-k="exp">
+                        <div class="bal-line"><span class="bal-label"><i class="bal-dot"></i>Uscita</span><span class="bal-amt" id="bal-y-exp-amt">0,0€</span></div>
+                        <div class="bal-track"><div class="bal-fill" id="bal-y-exp-fill"></div><i class="bal-mark" id="bal-y-exp-mark"></i></div>
+                    </div>
+                    <div class="bal-row" data-k="inv" id="row-y-inv">
+                        <div class="bal-line"><span class="bal-label"><i class="bal-dot"></i>Investito</span><span class="bal-amt" id="bal-y-inv-amt">0,0€</span></div>
+                        <div class="bal-track"><div class="bal-fill" id="bal-y-inv-fill"></div><i class="bal-mark" id="bal-y-inv-mark"></i></div>
+                    </div>
+                    </div>
+                    <div class="bal-foot" id="bal-y-foot">
+                        <div class="bal-foot-l"><span class="bal-foot-label">Risparmio</span><span class="bal-sav" id="bal-y-sav">0,0€</span></div>
+                        <span class="bal-pill" id="bal-y-pill">—</span>
                     </div>
                 </div>
-
-                <!-- WIDGET MENSILE -->
-                <div class="bg-[#161b22] border border-[#30363d] rounded-3xl p-4 shadow-xl flex flex-col min-w-0">
-                    <h3 class="text-[13px] sm:text-sm font-black text-slate-200 uppercase tracking-wider flex items-center gap-1.5 whitespace-nowrap">
-                        <i data-lucide="pie-chart" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0"></i>
-                        <span>BILANCIO</span> <span id="balance-month-title" class="text-sky-400">SETTEMBRE</span>
-                    </h3>
-
-                    <div class="mt-3 rounded-2xl bg-[#0d1117] border border-[#30363d] p-3 text-center">
-                        <div class="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Saldo netto</div>
-                        <div id="balance-month-net" class="mt-1 text-[20px] sm:text-[24px] leading-none font-black text-sky-400">0,0€</div>
+                <div id="bal-card-m" class="bal-card bal-m enter" style="animation-delay:120ms">
+                    <div class="bal-head">
+                        <div class="bal-title"><i data-lucide="calendar" class="w-4 h-4"></i><span>MENSILE</span></div>
+                        <div id="bal-m-period" class="bal-period">Settembre</div>
                     </div>
-
-                    <div class="mt-3 space-y-2 text-[11px] sm:text-xs">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>Entrate</span>
-                            <span id="balance-month-inc" class="font-extrabold text-emerald-400 whitespace-nowrap">0,0€</span>
-                        </div>
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>Uscite</span>
-                            <span id="balance-month-exp" class="font-extrabold text-red-400 whitespace-nowrap">0,0€</span>
-                        </div>
-                        <div id="balance-month-inv-row" class="flex items-center justify-between gap-2">
-                            <span class="text-slate-400 flex items-center gap-1.5 font-semibold min-w-0"><span class="w-2 h-2 rounded-full bg-yellow-400 shrink-0"></span>Investito</span>
-                            <span id="balance-month-inv" class="font-extrabold text-yellow-400 whitespace-nowrap">0,0€</span>
-                        </div>
+                    <div class="bal-rows">
+                    <div class="bal-row" data-k="inc">
+                        <div class="bal-line"><span class="bal-label"><i class="bal-dot"></i>Entrata</span><span class="bal-amt" id="bal-m-inc-amt">0,0€</span></div>
+                        <div class="bal-track"><div class="bal-fill" id="bal-m-inc-fill"></div></div>
                     </div>
-
-                    <div class="mt-auto pt-3">
-                        <div class="h-1.5 rounded-full bg-[#30363d] overflow-hidden flex">
-                            <span id="balance-month-exp-bar" class="bg-red-400 h-full" style="width:0%"></span>
-                            <span id="balance-month-inv-bar" class="bg-yellow-400 h-full" style="width:0%"></span>
-                        </div>
-                        <div class="mt-1.5 text-[9px] sm:text-[10px] text-slate-500 text-center uppercase tracking-wider">Uscite + investimenti</div>
+                    <div class="bal-row" data-k="exp">
+                        <div class="bal-line"><span class="bal-label"><i class="bal-dot"></i>Uscita</span><span class="bal-amt" id="bal-m-exp-amt">0,0€</span></div>
+                        <div class="bal-track"><div class="bal-fill" id="bal-m-exp-fill"></div><i class="bal-mark" id="bal-m-exp-mark"></i></div>
+                    </div>
+                    <div class="bal-row" data-k="inv" id="row-m-inv">
+                        <div class="bal-line"><span class="bal-label"><i class="bal-dot"></i>Investito</span><span class="bal-amt" id="bal-m-inv-amt">0,0€</span></div>
+                        <div class="bal-track"><div class="bal-fill" id="bal-m-inv-fill"></div><i class="bal-mark" id="bal-m-inv-mark"></i></div>
+                    </div>
+                    </div>
+                    <div class="bal-foot" id="bal-m-foot">
+                        <div class="bal-foot-l"><span class="bal-foot-label">Risparmio</span><span class="bal-sav" id="bal-m-sav">0,0€</span></div>
+                        <span class="bal-pill" id="bal-m-pill">—</span>
                     </div>
                 </div>
             </div>
@@ -556,7 +598,6 @@
         let currentRiepilogoYear = '2026';
         let currentSubOption = 'TOTALI'; // Impostata di default su TOTALI
 
-        let donutChartInstance = null;
         let barChartInstance = null;
         let investChartInstance = null;
         let investRingChartInstance = null;
@@ -1068,45 +1109,121 @@
             // Aggiorna Badge Periodo Selezione
             document.getElementById('current-period-badge').innerText = `${monthNames[currentMonth].toUpperCase()} ${currentYear}`;
 
-            renderBalanceWidgets(yearInc, yearExp, yearInv, yearSav, monthInc, monthExp, monthInv, monthSav);
+            // "Investito" viene mostrato solo se esiste almeno una transazione di quel tipo in tutto il database
+            const hasInvestito = allTransactions.some(t => t.type === 'Investito');
+            document.getElementById('row-m-inv').classList.toggle('hidden', !hasInvestito);
+            document.getElementById('row-y-inv').classList.toggle('hidden', !hasInvestito);
+
+            balLast = {
+                hasInv: hasInvestito,
+                yearLabel: currentYear,
+                monthLabel: monthNames[currentMonth],
+                y: { inc: yearInc, exp: yearExp, inv: yearInv },
+                m: { inc: monthInc, exp: monthExp, inv: monthInv }
+            };
+            fitBalance();
+            renderBalance(balLast);
             renderCategoryBarChart(monthTxs);
             renderSubTables(yearTxs, monthTxs);
         }
 
-        // WIDGET BILANCIO: visualizza il flusso Entrate -> Uscite/Investimenti -> Saldo.
-        // I due periodi sono separati e completamente visibili all'apertura della dashboard.
-        function updateBalanceWidget(prefix, inc, exp, inv, net, monthLabel = null) {
-            const titleEl = document.getElementById(`balance-${prefix}-title`);
-            const netEl = document.getElementById(`balance-${prefix}-net`);
-            const incEl = document.getElementById(`balance-${prefix}-inc`);
-            const expEl = document.getElementById(`balance-${prefix}-exp`);
-            const invRow = document.getElementById(`balance-${prefix}-inv-row`);
-            const invEl = document.getElementById(`balance-${prefix}-inv`);
-            const expBar = document.getElementById(`balance-${prefix}-exp-bar`);
-            const invBar = document.getElementById(`balance-${prefix}-inv-bar`);
+        // ===== BILANCIO A BARRE ANIMATE =====
+        // Le barre sono tutte nella stessa scala (la più lunga = dove va più denaro).
+        // La tacca bianca segna il livello delle entrate: le barre che la superano = si spende più di quanto entra.
+        let balLast = null;
+        const balPrev = {};   // ultimi valori mostrati, per far partire il conteggio da lì
+        const BAL_SAV = { m: { pos: '46,160,67', neg: '248,81,73' }, y: { pos: '56,189,248', neg: '168,85,247' } };
 
-            if (monthLabel !== null) titleEl.innerText = monthLabel.toUpperCase();
-
-            netEl.innerText = formatCurrency(net);
-            netEl.className = 'mt-1 text-[20px] sm:text-[24px] leading-none font-black ' + (net >= 0 ? 'text-emerald-400' : 'text-red-400');
-            incEl.innerText = formatCurrency(inc);
-            expEl.innerText = formatCurrency(exp);
-            invEl.innerText = formatCurrency(inv);
-
-            // L'investimento compare solo nel periodo in cui esiste davvero un investimento.
-            const hasInvestment = inv > 0;
-            invRow.classList.toggle('hidden', !hasInvestment);
-            invBar.classList.toggle('hidden', !hasInvestment);
-
-            const denominator = Math.max(inc, exp + inv, 1);
-            expBar.style.width = `${Math.min((exp / denominator) * 100, 100)}%`;
-            invBar.style.width = `${hasInvestment ? Math.min((inv / denominator) * 100, 100) : 0}%`;
+        function balCountTo(el, to, key) {
+            const from = balPrev[key] ?? 0;
+            balPrev[key] = to;
+            if (el._raf) cancelAnimationFrame(el._raf);
+            if (from === to) { el.textContent = formatCurrency(to); return; }
+            const dur = 900, t0 = performance.now();
+            const step = (now) => {
+                const p = Math.min(1, (now - t0) / dur);
+                const e = 1 - Math.pow(1 - p, 3);
+                el.textContent = formatCurrency(from + (to - from) * e);
+                if (p < 1) el._raf = requestAnimationFrame(step);
+            };
+            el._raf = requestAnimationFrame(step);
         }
 
-        function renderBalanceWidgets(yInc, yExp, yInv, yNet, mInc, mExp, mInv, mNet) {
-            updateBalanceWidget('year', yInc, yExp, yInv, yNet, String(currentYear));
-            updateBalanceWidget('month', mInc, mExp, mInv, mNet, monthNames[currentMonth]);
+        function balSetText(el, text) {
+            if (el.textContent === text) return;
+            el.textContent = text;
+            el.classList.remove('bal-swap'); void el.offsetWidth; el.classList.add('bal-swap');
         }
+
+        function renderBalance(d) {
+            const $ = (id) => document.getElementById(id);
+            balSetText($('bal-y-period'), d.yearLabel);
+            balSetText($('bal-m-period'), d.monthLabel);
+
+            ['y', 'm'].forEach((p) => {
+                const v = d[p];
+                const max = Math.max(v.inc, v.exp, d.hasInv ? v.inv : 0, 1);
+                [['inc', v.inc], ['exp', v.exp], ['inv', v.inv]].forEach(([k, val], idx) => {
+                    const fill = $(`bal-${p}-${k}-fill`);
+                    const delay = idx * 110;
+                    fill.style.transitionDelay = delay + 'ms';
+                    fill.style.width = (val > 0 ? Math.max(val / max * 100, 2.5) : 0) + '%';
+                    fill.style.setProperty('--d', delay + 'ms');
+                    fill.classList.remove('sheen'); void fill.offsetWidth; fill.classList.add('sheen');
+                    balCountTo($(`bal-${p}-${k}-amt`), val, `${p}-${k}`);
+                    const mark = $(`bal-${p}-${k}-mark`);
+                    if (mark) {
+                        mark.style.transitionDelay = delay + 'ms';
+                        mark.style.left = `calc(${v.inc / max * 100}% - 1px)`;
+                        mark.style.opacity = v.inc > 0 ? 1 : 0;
+                    }
+                });
+
+                const sav = v.inc - v.inv - v.exp;
+                $(`bal-${p}-foot`).style.setProperty('--sg', sav >= 0 ? BAL_SAV[p].pos : BAL_SAV[p].neg);
+                const savEl = $(`bal-${p}-sav`);
+                const wasKey = `${p}-sav`;
+                if (balPrev[wasKey] !== sav) { savEl.classList.remove('bal-pop'); void savEl.offsetWidth; savEl.classList.add('bal-pop'); }
+                balCountTo(savEl, sav, wasKey);
+
+                let pill;
+                if (v.inc > 0) {
+                    const rate = sav / v.inc * 100;
+                    pill = `${rate >= 0 ? '+' : '−'}${Math.abs(rate).toFixed(0)}% sulle entrate`;
+                } else {
+                    pill = sav < 0 ? 'nessuna entrata' : '—';
+                }
+                balSetText($(`bal-${p}-pill`), pill);
+            });
+        }
+
+        // Le due card insieme occupano tutta l'altezza visibile sotto l'header (iPhone incluso)
+        function fitBalance() {
+            const wrap = document.getElementById('balance-stack');
+            if (!wrap || wrap.offsetParent === null) return;
+            const top = wrap.getBoundingClientRect().top + window.scrollY;
+            const padBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+            const h = window.innerHeight - top - padBottom - 12;
+            wrap.style.height = Math.max(h, 540) + 'px';
+        }
+
+        // Rifà partire tutta l'animazione (entrata delle card, barre da zero, conteggi)
+        function balReplay() {
+            fitBalance();
+            ['y', 'm'].forEach((p, i) => {
+                const c = document.getElementById(`bal-card-${p}`);
+                c.classList.remove('enter'); c.style.animationDelay = (i * 120) + 'ms';
+                void c.offsetWidth; c.classList.add('enter');
+            });
+            document.querySelectorAll('.bal-fill').forEach((f) => { f.style.transition = 'none'; f.style.width = '0%'; });
+            document.querySelectorAll('.bal-mark').forEach((m) => { m.style.opacity = 0; });
+            void document.body.offsetWidth;
+            document.querySelectorAll('.bal-fill').forEach((f) => { f.style.transition = ''; });
+            Object.keys(balPrev).forEach((k) => delete balPrev[k]);
+            if (balLast) renderBalance(balLast);
+        }
+        window.addEventListener('resize', fitBalance);
+        window.addEventListener('orientationchange', () => setTimeout(fitBalance, 250));
 
         // GRAFICO BARRE ORIZZONTALI PER CATEGORIA
         function renderCategoryBarChart(monthTxs) {
@@ -1490,6 +1607,7 @@
             document.getElementById('riepilogo-header-controls').classList.toggle('hidden', view !== 'riepilogo');
             document.getElementById('investimenti-header-controls').classList.toggle('hidden', view !== 'investimenti');
             toggleSidebar(false);
+            if (view === 'dashboard') balReplay();
         }
 
         function switchSubOption(opt) {

@@ -1,6 +1,6 @@
 // Incrementa questo numero ogni volta che aggiorni index.html o gli altri file,
 // così il service worker capisce che deve scaricare la nuova versione.
-const CACHE_VERSION = 'v21';
+const CACHE_VERSION = 'v22';
 const CACHE_NAME = `finanze-app-cache-${CACHE_VERSION}`;
 
 // File dell'app (locali) da mettere in cache per il funzionamento offline
@@ -17,10 +17,10 @@ const APP_SHELL = [
 
 // Librerie esterne (CDN) usate dall'app: le mettiamo in cache così funzionano anche offline
 const EXTERNAL_ASSETS = [
-    'https://cdn.tailwindcss.com',
-    'https://cdn.jsdelivr.net/npm/chart.js',
+    'https://cdn.tailwindcss.com/3.4.16',
+    'https://cdn.jsdelivr.net/npm/chart.js@4.4.7',
     'https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0',
-    'https://unpkg.com/lucide@latest'
+    'https://unpkg.com/lucide@0.468.0'
 ];
 
 self.addEventListener('install', (event) => {
