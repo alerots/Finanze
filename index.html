@@ -1,4 +1,4 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it" class="h-full bg-[#0d1117] text-slate-100">
 <head>
     <meta charset="UTF-8">
@@ -30,7 +30,7 @@
                         darkBorder: '#30363d',
                         brandGreen: '#2ea043',
                         brandRed: '#f85149',
-                        brandBlue: '#38edf8',
+                        brandBlue: '#38bdf8',
                         brandPurple: '#a855f7',
                         brandOrange: '#f97316',
                         brandDarkYellow: '#ca8a04'
@@ -88,6 +88,12 @@
             user-select: none;
         }
 
+        /* ===== Animazioni di ingresso (Dashboard, Riepilogo, Investimenti) ===== */
+        .rv-hold { opacity: 0; }
+        .rv { animation: rvIn .65s cubic-bezier(.22,1,.36,1) backwards; animation-delay: calc(var(--i, 0) * 90ms); }
+        @keyframes rvIn { from { opacity: 0; transform: translateY(18px); } }
+        @media (prefers-reduced-motion: reduce) { .rv { animation: none !important; } }
+
         /* ===== BILANCIO: barre orizzontali animate (Annuale sopra, Mensile sotto) ===== */
         #balance-stack { display: flex; flex-direction: column; gap: 12px; height: 560px; margin-bottom: 16px; }
         .bal-card {
@@ -144,13 +150,10 @@
             .bal-fill { transition-duration: .01s !important; }
         }
 
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         /* Riga di intestazione (mesi) del Riepilogo Annuale: resta visibile
            mentre si scorre in verticale dentro il riquadro della tabella */
         .riepilogo-th-sticky { position: sticky; top: 0; z-index: 15; }
-        .riepilogo-th-sticky.riepilogo-corner { z-index: 20; }
 
         /* Righe verticali che separano le colonne dei mesi nel Riepilogo Annuale */
         .riepilogo-grid th, .riepilogo-grid td { border-right: 1px solid rgba(48, 54, 61, 0.6); }
@@ -795,6 +798,14 @@
                 renderAll();
                 renderDatabaseTable();
                 renderRiepilogoTable();
+
+                // Ingresso animato della vista attiva (anche dopo "Ricarica")
+                const activeSec = document.querySelector('.tab-view:not(.hidden)');
+                if (activeSec) {
+                    const v = activeSec.id.replace('view-', '');
+                    if (v === 'dashboard') balReplay();
+                    if (v === 'dashboard' || v === 'riepilogo' || v === 'investimenti') revealView(v);
+                }
             });
         }
 
@@ -902,6 +913,11 @@
             if (funds.length === 0) return;
             currentFundIndex = (currentFundIndex + direction + funds.length) % funds.length;
             renderFundDetail(funds);
+            const box = document.getElementById('fund-swipe-container');
+            if (box) {
+                quickIn(document.getElementById('fund-name'), direction * 24);
+                Array.from(box.children).slice(1).forEach((el) => quickIn(el, direction * 24));
+            }
         }
 
         function renderFundDetail(funds) {
@@ -1175,7 +1191,7 @@
             if (from === to) { el.textContent = formatCurrency(to); return; }
             const dur = 900, t0 = performance.now();
             const step = (now) => {
-                const p = Math.min(1, (now - t0) / dur);
+                const p = Math.max(0, Math.min(1, (now - t0) / dur));
                 const e = 1 - Math.pow(1 - p, 3);
                 el.textContent = formatCurrency(from + (to - from) * e);
                 if (p < 1) el._raf = requestAnimationFrame(step);
@@ -1245,6 +1261,52 @@
         window.addEventListener('resize', fitBalance);
         window.addEventListener('orientationchange', () => setTimeout(fitBalance, 250));
 
+        // ===== ANIMAZIONI DI INGRESSO =====
+        // Le card compaiono dal basso quando entrano nello schermo; i grafici ripartono da zero in quel momento.
+        const rvObserver = ('IntersectionObserver' in window) ? new IntersectionObserver((entries) => {
+            entries.forEach((e) => {
+                if (!e.isIntersecting) return;
+                const el = e.target;
+                rvObserver.unobserve(el);
+                el.classList.remove('rv-hold'); void el.offsetWidth; el.classList.add('rv');
+                if (el._onReveal) el._onReveal();
+            });
+        }, { rootMargin: '0px 0px -6% 0px', threshold: 0 }) : null;
+
+        function armReveal(el, idx, onReveal) {
+            el.classList.remove('rv', 'rv-hold');
+            el._onReveal = onReveal || null;
+            el.style.setProperty('--i', idx);
+            if (!rvObserver) { void el.offsetWidth; el.classList.add('rv'); if (onReveal) onReveal(); return; }
+            rvObserver.unobserve(el);
+            el.classList.add('rv-hold');
+            rvObserver.observe(el);
+        }
+
+        function replayChart(chart) { if (chart) { chart.reset(); chart.update(); } }
+
+        function revealView(view) {
+            const sec = document.getElementById(`view-${view}`);
+            if (!sec) return;
+            let i = 0;
+            Array.from(sec.children).forEach((el) => {
+                if (el.id === 'balance-stack') return; // ha già la sua animazione (balReplay)
+                let cb = null;
+                if (el.querySelector('#bar-chart-container')) cb = () => replayChart(barChartInstance);
+                else if (el.querySelector('#investPrincipalRing')) cb = () => { replayChart(investRingChartInstance); replayChart(investGainRingChartInstance); };
+                armReveal(el, i++, cb);
+            });
+        }
+
+        // Piccola entrata per contenuti che cambiano sul posto (sotto-schede, cambio fondo)
+        function quickIn(el, dx) {
+            if (!el || !el.animate || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+            el.animate(
+                [{ opacity: 0, transform: `translate(${dx || 0}px, 10px)` }, { opacity: 1, transform: 'none' }],
+                { duration: 380, easing: 'cubic-bezier(.22,1,.36,1)' }
+            );
+        }
+
         // GRAFICO BARRE ORIZZONTALI PER CATEGORIA
         function renderCategoryBarChart(monthTxs) {
             const ctx = document.getElementById('categoryBarChart').getContext('2d');
@@ -1279,6 +1341,11 @@
                 },
                 options: {
                     indexAxis: 'y',
+                    animation: {
+                        duration: 900,
+                        easing: 'easeOutQuart',
+                        delay: (c) => (c.type === 'data' && c.mode === 'default') ? Math.min(c.dataIndex * 55, 600) : 0
+                    },
                     responsive: true,
                     maintainAspectRatio: false,
                     layout: {
@@ -1491,32 +1558,47 @@
             document.getElementById('db-save-btn').classList.toggle('hidden', modifiedYears.size === 0);
         }
 
-        // Rigenera il file .txt di un anno (stesso formato di caricamento: una riga JSON per transazione)
-        // e lo scarica. IMPORTANTE: su Safari/iOS il click deve avvenire in modo SINCRONO dentro
-        // il gestore del tap, altrimenti il download viene bloccato in silenzio (bug corretto qui:
-        // prima era dentro un setTimeout e per questo non succedeva nulla).
+        // Contenuto del file .txt di un anno (stesso formato di caricamento: una riga JSON per transazione)
+        function buildYearFileContent(year) {
+            return allTransactions
+                .filter(t => t.date.getFullYear() === year)
+                .sort((a, b) => a.date - b.date)
+                .map(t => JSON.stringify({
+                    Data: t.rawDate,
+                    Tipo: t.type,
+                    Categoria: t.category,
+                    Importo: t.amount.toString().replace('.', ','),
+                    Note: t.notes || ''
+                }))
+                .join('\n');
+        }
+
+        // Salva gli anni modificati. Su iPhone apre il foglio di condivisione ("Salva in File"):
+        // un solo tocco per tutti gli anni modificati. Se il dispositivo non lo supporta si usa il
+        // download classico (un file per tap). IMPORTANTE: sia share() sia il click del download
+        // devono partire in modo SINCRONO dentro il gestore del tap, senza setTimeout né await.
         function saveModifiedYears() {
             if (modifiedYears.size === 0) return;
-
-            // Un solo file per tap: è l'unico modo affidabile su iPhone. Se ci sono più anni
-            // modificati, dopo il primo salvataggio il tasto resta visibile per il successivo.
             const years = Array.from(modifiedYears).sort();
+
+            try {
+                if (typeof File === 'function' && navigator.share && navigator.canShare) {
+                    const files = years.map(y => new File([buildYearFileContent(y)], `${y}.txt`, { type: 'text/plain' }));
+                    if (navigator.canShare({ files })) {
+                        navigator.share({ files }).then(() => {
+                            years.forEach(y => modifiedYears.delete(y));
+                            updateSaveButtonVisibility();
+                        }).catch((err) => {
+                            if (err && err.name === 'AbortError') return; // annullato: le modifiche restano da salvare
+                            alert('Non riesco ad aprire il foglio di condivisione. Riprova.');
+                        });
+                        return;
+                    }
+                }
+            } catch (err) { /* si passa al download classico */ }
+
             const year = years[0];
-
-            const yearTxs = allTransactions
-                .filter(t => t.date.getFullYear() === year)
-                .sort((a, b) => a.date - b.date);
-
-            const lines = yearTxs.map(t => JSON.stringify({
-                Data: t.rawDate,
-                Tipo: t.type,
-                Categoria: t.category,
-                Importo: t.amount.toString().replace('.', ','),
-                Note: t.notes || ''
-            }));
-
-            const content = lines.join('\n');
-            const blob = new Blob([content], { type: 'text/plain' });
+            const blob = new Blob([buildYearFileContent(year)], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1628,6 +1710,7 @@
             document.getElementById('investimenti-header-controls').classList.toggle('hidden', view !== 'investimenti');
             toggleSidebar(false);
             if (view === 'dashboard') balReplay();
+            if (view === 'dashboard' || view === 'riepilogo' || view === 'investimenti') revealView(view);
         }
 
         function switchSubOption(opt) {
@@ -1649,6 +1732,7 @@
 
             document.getElementById('riep-sub-riepilogo-view').classList.toggle('hidden', opt !== 'RIEPILOGO');
             document.getElementById('riep-sub-categoria-view').classList.toggle('hidden', opt !== 'CATEGORIA');
+            quickIn(document.getElementById(opt === 'RIEPILOGO' ? 'riep-sub-riepilogo-view' : 'riep-sub-categoria-view'));
         }
 
         // SWIPE ADATTATO AI NUOVI TASTI INVERTITI
